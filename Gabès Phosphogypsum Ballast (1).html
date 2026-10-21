@@ -1,0 +1,356 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Gabès Phosphogypsum Ballast</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#06141b;--paper:#f3efe6;--warn:#f2b24c;--clean:#4fd6c4;--alarm:#e5694b;--dim:rgba(243,239,230,.72)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:'IBM Plex Sans',system-ui,sans-serif}
+#world{position:fixed;inset:0;width:100%;height:100%;display:block}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.45) 100%)}
+.scene{position:fixed;inset:0;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .6s,visibility 0s .6s;z-index:5}
+.scene.active{opacity:1;visibility:visible;transition:opacity .7s;pointer-events:none}
+.scene .copy{position:absolute;left:clamp(20px,5vw,80px);top:50%;transform:translateY(-50%);max-width:min(480px,44vw);display:flex;flex-direction:column;gap:14px;padding:22px 24px;border-radius:14px;background:linear-gradient(90deg,rgba(4,14,20,.72),rgba(4,14,20,.38));backdrop-filter:blur(3px)}
+.scene.end .copy{background:linear-gradient(90deg,rgba(3,30,40,.62),rgba(3,30,40,.3))}
+.kicker{font:500 12px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--warn)}
+.clean .kicker,.end .kicker{color:var(--clean)}
+h1,h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;line-height:1.02;letter-spacing:-.02em}
+h1{font-size:clamp(38px,6vw,84px)}h2{font-size:clamp(28px,3.8vw,52px)}
+.lede{font-size:clamp(15px,1.25vw,18px);line-height:1.5;color:var(--dim)}
+.big{font:800 clamp(40px,5.5vw,76px)/1 'Bricolage Grotesque',sans-serif;color:var(--alarm)}
+.clean .big,.end .big{color:var(--clean)}
+.stats{display:flex;gap:18px;flex-wrap:wrap}
+.stat b{display:block;font:800 clamp(24px,2.6vw,36px)/1 'Bricolage Grotesque',sans-serif;color:var(--warn)}
+.stat span{font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.cards{display:grid;gap:10px}
+.card{padding:12px 14px;border-left:3px solid var(--warn);background:rgba(255,255,255,.06);border-radius:0 8px 8px 0;font-size:14px;line-height:1.4}
+.card b{display:block;font-family:'Bricolage Grotesque';font-size:16px}
+.clean .card,.end .card{border-color:var(--clean)}
+.note{font:500 11px 'IBM Plex Mono',monospace;color:var(--dim);opacity:.8}
+.panel{position:absolute;right:clamp(20px,5vw,80px);top:50%;transform:translateY(-50%);width:min(430px,42vw);padding:20px;border-radius:14px;background:rgba(4,14,20,.74);backdrop-filter:blur(4px);display:flex;flex-direction:column;gap:12px}
+.a{opacity:0;transform:translateY(18px)}
+.active .a{animation:rise .8s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--d,0)*.12s + .5s)}
+@keyframes rise{to{opacity:1;transform:none}}
+.btn{pointer-events:auto;cursor:pointer;font:500 12px 'IBM Plex Mono',monospace;color:var(--ink);background:var(--clean);border:0;border-radius:99px;padding:9px 16px;align-self:flex-start}
+.cubewrap{position:absolute;right:12vw;top:50%;width:260px;height:260px;margin-top:-130px;perspective:900px;opacity:0}
+.active .cubewrap{animation:fade 1s .8s forwards}@keyframes fade{to{opacity:1}}
+.cube{position:absolute;inset:0;transform-style:preserve-3d;animation:spin 18s linear infinite}
+@keyframes spin{from{transform:rotateX(-22deg) rotateY(0)}to{transform:rotateX(-22deg) rotateY(360deg)}}
+.cb{position:absolute;left:50%;top:50%;transform-style:preserve-3d;transition:opacity .8s,transform .8s}
+.cb i{position:absolute;inset:0;border:1.5px solid rgba(255,255,255,.55)}
+.cb i:nth-child(1){transform:translateZ(var(--h))}.cb i:nth-child(2){transform:rotateY(180deg) translateZ(var(--h))}
+.cb i:nth-child(3){transform:rotateY(90deg) translateZ(var(--h))}.cb i:nth-child(4){transform:rotateY(-90deg) translateZ(var(--h))}
+.cb i:nth-child(5){transform:rotateX(90deg) translateZ(var(--h))}.cb i:nth-child(6){transform:rotateX(-90deg) translateZ(var(--h))}
+#cShell{--h:110px;width:220px;height:220px;margin:-110px 0 0 -110px;opacity:0}#cShell i{background:rgba(160,170,175,.35)}
+#cLiner{--h:78px;width:156px;height:156px;margin:-78px 0 0 -78px;opacity:0}#cLiner i{background:rgba(79,214,196,.3)}
+#cCore{--h:44px;width:88px;height:88px;margin:-44px 0 0 -44px;opacity:0}#cCore i{background:rgba(242,178,76,.85)}
+.cube.s1 #cCore,.cube.s2 #cCore,.cube.s3 #cCore{opacity:1}.cube.s2 #cLiner,.cube.s3 #cLiner{opacity:1}.cube.s3 #cShell{opacity:1}
+.cube.peel #cShell{transform:translateX(-150px)}.cube.peel #cLiner{transform:translateX(-60px)}
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9;display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:99px;background:rgba(4,14,20,.7);backdrop-filter:blur(6px)}
+#dock button{pointer-events:auto;cursor:pointer;border:0;background:none;color:var(--paper);font-size:18px;width:30px;height:30px;border-radius:50%}
+#dock button:hover{background:rgba(255,255,255,.15)}
+#segs{display:flex;gap:5px}#segs i{width:16px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);cursor:pointer;transition:.3s}
+#segs i.on{background:var(--clean);width:28px}#segs i.done{background:rgba(255,255,255,.6)}
+#now{font:500 11px 'IBM Plex Mono',monospace;color:var(--dim);min-width:64px;text-align:center}
+#hint{position:fixed;right:18px;bottom:20px;font:500 11px 'IBM Plex Mono',monospace;color:var(--dim);z-index:9;transition:opacity .6s}
+.sw{transform-box:fill-box}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(22px)}}
+@keyframes spinr{to{transform:rotate(360deg)}}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.rotor{transform-box:fill-box;transform-origin:center;animation:spinr 6s linear infinite}
+.bob{animation:bob 4s ease-in-out infinite}.drift{animation:drift 9s ease-in-out infinite}.swayp{transform-box:fill-box;transform-origin:50% 100%;animation:sway 5s ease-in-out infinite}
+.pin{transition:opacity .5s}
+@media(max-width:760px){
+.scene .copy{left:12px;right:12px;top:64px;transform:none;max-width:none;padding:14px 16px;gap:9px}
+.panel,.cubewrap{display:none}.lede{font-size:14px}.card:nth-child(n+3){display:none}
+#hint,#fs,#now{display:none}#segs i{width:10px}#segs i.on{width:18px}.stat b{font-size:22px}}
+@media(prefers-reduced-motion:reduce){.rotor,.bob,.drift,.swayp,.cube{animation:none}}
+</style></head><body>
+<svg id="world" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"></svg>
+<canvas id="fx"></canvas><div class="vig"></div>
+
+<section class="scene" id="s1"><div class="copy">
+<div class="kicker a" style="--d:0">Gabès · Gulf of Gabès · Tunisia</div>
+<h1 class="a" style="--d:1">Every day, the sea takes<br>the hit.</h1>
+<p class="lede a" style="--d:2">12,500–15,000 tonnes of phosphogypsum leave the plant and enter the Gulf — daily, for decades.</p>
+<div class="stats a" style="--d:3"><div class="stat"><b id="tick">0</b><span>tonnes dumped since you opened this page</span></div><div class="stat"><b>~4 Mt</b><span>per year</span></div></div>
+</div></section>
+
+<section class="scene" id="s2"><div class="copy">
+<div class="kicker a" style="--d:0">01 · Dive in · The plume</div>
+<h2 class="a" style="--d:1">A milky, acidic plume that suffocates the shelf.</h2>
+<p class="lede a" style="--d:2">Fish die or flee. Nets come up empty. Fisher income collapses from 700 to 20 TND a day.</p>
+<div class="stats a" style="--d:3"><div class="stat"><b>700→20</b><span>TND / day per fisher</span></div><div class="stat"><b>76M</b><span>TND lost every year</span></div></div>
+</div></section>
+
+<section class="scene" id="s3"><div class="copy">
+<div class="kicker a" style="--d:0">02 · The seabed</div>
+<h2 class="a" style="--d:1">70–200+ million tonnes, settled for good.</h2>
+<p class="lede a" style="--d:2">Roughly 60 km² of seabed buried in sediment. Nothing grows here. The cost is spread across the whole coast:</p>
+<div class="cards a" style="--d:3"><div class="card"><b>Fishing · 47%</b>Catch and livelihoods</div><div class="card"><b>Tourism · 33% (25M TND)</b>Beaches nobody visits</div><div class="card"><b>Health · 13% (10M TND)</b>Respiratory and skin illness</div><div class="card"><b>Farming · 7% (5M TND)</b>Oasis agriculture</div></div>
+</div></section>
+
+<section class="scene clean" id="s4"><div class="copy">
+<div class="kicker a" style="--d:0">03 · The turn · Stage 1</div>
+<h2 class="a" style="--d:1">We catch it before it reaches the sea.</h2>
+<p class="lede a" style="--d:2">An intercept station on the outfall diverts the flow. The gate closes — the plume stops.</p>
+<div class="stats a" style="--d:3"><div class="stat"><b id="tick2">0</b><span>tonnes diverted to modules</span></div></div>
+</div></section>
+
+<section class="scene clean" id="s5"><div class="copy">
+<div class="kicker a" style="--d:0">04 · The module</div>
+<h2 class="a" style="--d:1">Waste becomes a building block.</h2>
+<p class="lede a" style="--d:2">Phosphogypsum is packed in a core, sealed with a liner, encased in a concrete shell. Click the cube to step through.</p>
+<button class="btn a" id="peel" style="--d:3">Peel the layers</button>
+<div class="note a" style="--d:4">One large foundation: 19–27 kt ≈ 2 days of discharge.</div>
+</div>
+<div class="cubewrap"><div class="cube" id="cube"><div class="cb" id="cShell"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cb" id="cLiner"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cb" id="cCore"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div></section>
+
+<section class="scene clean" id="s6"><div class="copy">
+<div class="kicker a" style="--d:0">05 · Product one</div>
+<h2 class="a" style="--d:1">Offshore wind turbine foundations.</h2>
+<p class="lede a" style="--d:2">The modules become the ballast base of turbines — clean power standing on yesterday's waste.</p>
+<div class="note a" style="--d:3">Placeholder: turbine count, MW and price per tonne to be confirmed.</div>
+</div></section>
+
+<section class="scene clean" id="s7"><div class="copy">
+<div class="kicker a" style="--d:0">06 · More products</div>
+<h2 class="a" style="--d:1">Breakwaters, floating solar, tidal and reefs.</h2>
+<div class="cards a" style="--d:2"><div class="card"><b>Breakwaters</b>Protect the coast from erosion</div><div class="card"><b>Floating solar anchors</b>Ballast for PV arrays</div><div class="card"><b>Tidal &amp; artificial reefs</b>Marine life returns</div></div>
+</div></section>
+
+<section class="scene clean" id="s8"><div class="copy">
+<div class="kicker a" style="--d:0">07 · Business model</div>
+<h2 class="a" style="--d:1">We get paid on both ends.</h2>
+<p class="lede a" style="--d:2">Revenue per tonne treated, plus revenue per module sold. Placeholder prices below.</p>
+</div>
+<div class="panel" id="panel7">
+<div class="card a" style="--d:2"><b>Waste in · [X] TND / tonne</b>Gate fee paid by the plant or state</div>
+<div class="card a" style="--d:3"><b>Module out · [Y] TND / tonne</b>Sold to wind, coastal and solar developers</div>
+<div class="card a" style="--d:4"><b>Margin · [Z]%</b>Placeholder — edit with your model</div>
+</div></section>
+
+<section class="scene clean" id="s9"><div class="copy">
+<div class="kicker a" style="--d:0">08 · Roadmap</div>
+<h2 class="a" style="--d:1">Five stages, one clean coast.</h2>
+</div>
+<div class="panel" id="road">
+<div class="card a" style="--d:1"><b>1 · Pilot · months 0–12</b>Intercept station and first modules</div>
+<div class="card a" style="--d:2"><b>2 · Demo · months 9–24</b>First turbine foundation</div>
+<div class="card a" style="--d:3"><b>3 · Scale · months 24–42</b>Production line, more products</div>
+<div class="card a" style="--d:4"><b>4 · Deploy · months 36–60</b>Coastal and offshore sites</div>
+<div class="card a" style="--d:5"><b>5 · Year 5+</b>≈1.5% of discharge absorbed (placeholder)</div>
+</div></section>
+
+<section class="scene end" id="s10"><div class="copy">
+<div class="kicker a" style="--d:0">09 · The ask</div>
+<h2 class="a" style="--d:1">Raising [€X] to build the pilot.</h2>
+<div class="cards a" style="--d:2"><div class="card"><b>[40%] Intercept station</b></div><div class="card"><b>[35%] Module plant</b></div><div class="card"><b>[25%] Team &amp; permits</b></div></div>
+<div class="note a" style="--d:3">Scope: solid waste only — gas emissions are not addressed.</div>
+</div></section>
+
+<section class="scene end" id="s11"><div class="copy">
+<div class="kicker a" style="--d:0">Gabès, restored</div>
+<h2 class="a" style="--d:1">From the worst shore to the best.</h2>
+<p class="lede a" style="--d:2">[Company name] · [Founder, CEO] · [Founder, CTO]<br>[email] · [phone]</p>
+</div></section>
+
+<div id="dock"><button id="prev" aria-label="Previous">‹</button><div id="segs"></div><button id="next" aria-label="Next">›</button><button id="fs" aria-label="Fullscreen">⛶</button><span id="now"></span></div>
+<div id="hint">← → or swipe</div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const SURF=700,XMIN=-1400,XMAX=16400;
+const T=[[-1400,480],[-400,500],[0,540],[400,610],[800,690],[900,722],[1100,790],[1500,960],[2000,1200],[2500,1450],[3000,1620],[3500,1800],[4000,2050],[4600,2370],[5200,2600],[5700,2560],[6100,2350],[6400,1700],[6620,1100],[6760,760],[6830,660],[6870,640],[8240,640],[8300,700],[8420,1000],[8560,1170],[8700,1190],[10400,1190],[11000,1130],[11600,1010],[12100,860],[12450,745],[12600,700],[12800,662],[13400,625],[14000,540],[14800,400],[16400,300]];
+const STOPS=[{cx:700,cy:560,z:.75},{cx:3150,cy:1250,z:.7},{cx:5200,cy:2200,z:.9},{cx:7000,cy:540,z:1},{cx:8050,cy:740,z:1},{cx:8650,cy:725,z:.85},{cx:10450,cy:880,z:.72},{cx:11700,cy:800,z:.85},{cx:12350,cy:740,z:.9},{cx:12950,cy:680,z:.9},{cx:13900,cy:560,z:1}];
+function ty(x){if(x<=T[0][0])return T[0][1];for(let i=1;i<T.length;i++){if(x<=T[i][0]){const a=T[i-1],b=T[i],t=(x-a[0])/(b[0]-a[0]);return a[1]+(b[1]-a[1])*t}}return T[T.length-1][1]}
+function smooth(p){let d=`M${p[0][0]},${p[0][1]}`;for(let i=1;i<p.length-1;i++){const mx=(p[i][0]+p[i+1][0])/2,my=(p[i][1]+p[i+1][1])/2;d+=`Q${p[i][0]},${p[i][1]} ${mx},${my}`}const l=p[p.length-1];return d+`L${l[0]},${l[1]}`}
+let _id=0;const rnd=(a,b)=>a+Math.random()*(b-a);
+let seed=7;const sr=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+const R=(a,b)=>a+sr()*(b-a);
+function reg(x0,x1,inner){return `<g class="reg" data-x0="${x0}" data-x1="${x1}">${inner}</g>`}
+function waves(x0,x1,y,col,op,amp=10){let d=`M${x0},${y}`;for(let x=x0;x<x1;x+=80)d+=`q20,-${amp} 40,0t40,0`;d+=`V${y+40}H${x0}Z`;return `<path d="${d}" fill="${col}" opacity="${op}"/>`}
+function surfWaves(x0,x1,col,op){return `<g class="drift">${waves(x0-60,x1+60,SURF,col,op,8)}</g><g class="drift" style="animation-delay:-3s">${waves(x0-20,x1+100,SURF+14,col,op*.6,6)}</g>`}
+function palm(x,y,s,lean,col='#2f8a3c',delay=0){let o=`<g transform="translate(${x},${y}) scale(${s})"><g class="swayp" style="animation-delay:${delay}s"><path d="M0,0 Q${lean*.5},-70 ${lean},-140" stroke="#7a5a36" stroke-width="9" fill="none" stroke-linecap="round"/>`;for(let i=0;i<7;i++){const a=-160+i*50;o+=`<path d="M${lean},-140 q${Math.cos(a*Math.PI/180)*50},${Math.sin(a*Math.PI/180)*50-14} ${Math.cos(a*Math.PI/180)*78},${Math.sin(a*Math.PI/180)*50+22}" stroke="${col}" stroke-width="7" fill="none" stroke-linecap="round"/>`}return o+'</g></g>'}
+function deadPalm(x,y,s,lean){let o=`<g transform="translate(${x},${y}) scale(${s})"><path d="M0,0 Q${lean*.4},-60 ${lean},-120" stroke="#4a3d2c" stroke-width="8" fill="none" stroke-linecap="round"/>`;for(let i=0;i<5;i++){const a=-150+i*30;o+=`<path d="M${lean},-120 q${Math.cos(a*Math.PI/180)*20},${Math.sin(a*Math.PI/180)*10+30} ${Math.cos(a*Math.PI/180)*34},${50+i*4}" stroke="#6a5a38" stroke-width="3" fill="none"/>`}return o+'</g>'}
+function turbine(x,y,h,col,spin=true){const bl=h*.34;let b='';for(let i=0;i<3;i++)b+=`<path d="M0,0 L${-bl*.04},${-bl} L${bl*.04},${-bl}Z" fill="${col}" transform="rotate(${i*120})"/>`;return `<g transform="translate(${x},${y})"><path d="M${-h*.016},0 L${-h*.008},${-h} L${h*.008},${-h} L${h*.016},0Z" fill="${col}"/><g transform="translate(0,${-h})"><circle r="${h*.02}" fill="${col}"/><g class="${spin?'rotor':''}">${b}</g></g></g>`}
+function plant(x,y,s,col,smoke){let o=`<g transform="translate(${x},${y}) scale(${s})"><rect x="-120" y="-70" width="240" height="70" fill="#2b2f33"/><rect x="-100" y="-100" width="70" height="30" fill="#383d42"/>`;for(let i=0;i<3;i++)o+=`<path d="M${-70+i*70},-70 l6,-110 h28 l6,110z" fill="#4a4f55"/><rect x="${-68+i*70}" y="-172" width="34" height="8" fill="#b33"/>`;if(smoke){for(let i=0;i<3;i++)for(let k=0;k<6;k++)o+=`<circle cx="${-53+i*70+k*28}" cy="${-190-k*38}" r="${26+k*13}" fill="${k%2?'#2a2420':'#5b4a33'}" opacity="${.62-k*.06}"><animate attributeName="cy" values="${-190-k*38};${-210-k*38};${-190-k*38}" dur="${5+k}s" repeatCount="indefinite"/></circle>`}return o+'</g>'}
+function isoCube(cx,cy,s,t,l,r){return `<g transform="translate(${cx},${cy})"><path d="M0,${-s} L${s},${-s/2} L0,0 L${-s},${-s/2}Z" fill="${t}"/><path d="M${-s},${-s/2} L0,0 L0,${s} L${-s},${s/2}Z" fill="${l}"/><path d="M${s},${-s/2} L0,0 L0,${s} L${s},${s/2}Z" fill="${r}"/></g>`}
+function fishW(x,y,s,col,flip=1){return `<g transform="translate(${x},${y}) scale(${s*flip},${s})"><g class="drift"><path d="M-14,0 q14,-12 28,0 q-14,12 -28,0z M-14,0 l-10,-8 v16z" fill="${col}"/><circle cx="8" cy="-2" r="1.5" fill="#fff"/></g></g>`}
+function deadFish(x,y,s=1){return `<g transform="translate(${x},${y}) scale(${s}) rotate(180)"><path d="M-14,0 q14,-12 28,0 q-14,12 -28,0z M-14,0 l-10,-8 v16z" fill="#8b8a73"/><path d="M5,-4 l5,5 M10,-4 l-5,5" stroke="#222" stroke-width="1.5"/></g>`}
+function trefoil(x,y){return `<g transform="translate(${x},${y})"><circle r="18" fill="#f2b24c" stroke="#222" stroke-width="2"/><circle r="3" fill="#222"/>${[0,120,240].map(a=>`<path d="M0,0 L11,-8 A14,14 0 0 0 -11,-8Z" transform="rotate(${a})" fill="#222"/>`).join('')}</g>`}
+function net(x,y,w,h){let o=`<g stroke="#9a8f6a" stroke-width="1" opacity=".75" fill="none"><path d="M${x},${y} q${w/2},${h*.25} ${w},0"/>`;for(let i=1;i<6;i++)o+=`<path d="M${x+i*w/6},${y+3} v${h}"/>`;for(let j=1;j<5;j++)o+=`<path d="M${x},${y+j*h/5} q${w/2},6 ${w},0"/>`;return o+'</g>'}
+function boat(x,y,s,rot,col){return `<g transform="translate(${x},${y}) rotate(${rot}) scale(${s})"><path d="M-70,0 L70,0 L50,26 L-52,26Z" fill="${col}"/><rect x="-14" y="-34" width="30" height="34" fill="#d9d4c3"/><rect x="-10" y="-28" width="9" height="9" fill="#345"/></g>`}
+function umbrella(x,y,c){return `<g transform="translate(${x},${y})"><path d="M0,0 V-46" stroke="#555" stroke-width="2"/><path d="M-30,-46 q30,-34 60,0z" fill="${c}"/></g>`}
+function person(x,y,c,s=1){return `<g transform="translate(${x},${y}) scale(${s})"><circle cy="-30" r="5" fill="#e0b48c"/><rect x="-4" y="-25" width="8" height="18" rx="3" fill="${c}"/><path d="M-3,-7 v8 M3,-7 v8" stroke="#345" stroke-width="3"/></g>`}
+function breakwater(cx,base,crest,hb,hc){let o='';for(let i=0;i<4;i++)for(let j=0;j<4-i;j++){o+=isoCube(cx-70+i*34+j*68-34*(3-i)+34*(3-i)*0,base-i*40,36,'#bfc6c9','#8a9296','#6e777b')}return `<g>${o}</g>`}
+function solarRow(cx,base){let o='';for(let i=0;i<6;i++){const x=cx-250+i*100;o+=`<g class="bob" style="animation-delay:${-i*.6}s"><path d="M${x-40},${SURF-6} l10,-24 h60 l10,24z" fill="#1c3f7a" stroke="#9fc4ff" stroke-width="1.5"/><path d="M${x-30},${SURF-12} h60M${x-20},${SURF-24} v18M${x},${SURF-24} v18M${x+20},${SURF-24} v18" stroke="#6f9bd8" stroke-width="1"/></g><path d="M${x},${SURF+8} L${x},${base-30}" stroke="#8aa" stroke-width="1" stroke-dasharray="4 5" opacity=".6"/>${isoCube(x,base,24,'#bfc6c9','#8a9296','#6e777b')}`}return o}
+function tidal(cx,base){return `<g transform="translate(${cx},${base})"><rect x="-6" y="-300" width="12" height="300" fill="#9aa5ab"/>${isoCube(0,0,34,'#bfc6c9','#8a9296','#6e777b')}<g transform="translate(0,-280)"><g class="rotor">${[0,90,180,270].map(a=>`<path d="M-5,0 L-3,-60 L3,-60 L5,0Z" fill="#4fd6c4" transform="rotate(${a})"/>`).join('')}</g></g></g>`}
+function reefs(cx,base){let o='';for(let i=0;i<5;i++)o+=isoCube(cx+i*52-100,base-(i%2)*18,26,'#cbb98a','#9d8d68','#83754f');for(let i=0;i<6;i++)o+=fishW(cx-120+i*50,base-80-(i%3)*30,.9,['#ffb347','#4fd6c4','#ff7f66'][i%3],i%2?1:-1);return o}
+</script>
+<script>
+"use strict";
+function breakwater(cx,base,rows){let o='';for(let i=0;i<rows;i++){const n=rows-i;for(let j=0;j<n;j++)o+=isoCube(cx+(j-(n-1)/2)*62,base-i*38,34,'#c3c9cc','#8a9296','#6e777b')}return o}
+function clouds(x0,x1,y0,y1,col,op){let o='';for(let i=0;i<5;i++){const x=R(x0,x1),y=R(y0,y1),w=R(160,320);o+=`<g class="drift" style="animation-delay:${-i*2}s"><ellipse cx="${x}" cy="${y}" rx="${w}" ry="${w*.2}" fill="${col}" opacity="${op}"/><ellipse cx="${x+w*.3}" cy="${y-w*.12}" rx="${w*.55}" ry="${w*.18}" fill="${col}" opacity="${op}"/></g>`}return o}
+function defs(){const W=XMAX-XMIN;return `<defs>
+<linearGradient id="skyBad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1714"/><stop offset=".55" stop-color="#5c4528"/><stop offset="1" stop-color="#a47b45"/></linearGradient>
+<linearGradient id="skyOk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f78c4"/><stop offset=".7" stop-color="#8fd3ee"/><stop offset="1" stop-color="#d9f3f4"/></linearGradient>
+<linearGradient id="seaBad" gradientUnits="userSpaceOnUse" x1="0" y1="700" x2="0" y2="2900"><stop offset="0" stop-color="#8b8a3e"/><stop offset=".25" stop-color="#4f4f24"/><stop offset=".6" stop-color="#1c1d10"/><stop offset="1" stop-color="#060704"/></linearGradient>
+<linearGradient id="seaOk" gradientUnits="userSpaceOnUse" x1="0" y1="700" x2="0" y2="2900"><stop offset="0" stop-color="#37d4cc"/><stop offset=".25" stop-color="#0d8fa6"/><stop offset=".6" stop-color="#05506c"/><stop offset="1" stop-color="#021a2c"/></linearGradient>
+<linearGradient id="hOk" gradientUnits="userSpaceOnUse" x1="7300" y1="0" x2="10400" y2="0"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<mask id="mOk" maskUnits="userSpaceOnUse" x="${XMIN}" y="-1500" width="${W}" height="5000"><rect x="${XMIN}" y="-1500" width="${W}" height="5000" fill="url(#hOk)"/></mask>
+<linearGradient id="terr" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="13000" y2="0"><stop offset="0" stop-color="#4a4435"/><stop offset=".45" stop-color="#352f23"/><stop offset=".62" stop-color="#6b6550"/><stop offset=".76" stop-color="#b8a574"/><stop offset=".95" stop-color="#ecd8a2"/></linearGradient>
+<linearGradient id="terrShade" gradientUnits="userSpaceOnUse" x1="0" y1="700" x2="0" y2="2700"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></linearGradient>
+<radialGradient id="sun"><stop offset="0" stop-color="#fffbe0"/><stop offset=".25" stop-color="#ffe9a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a0" stop-opacity="0"/></radialGradient>
+<radialGradient id="milk"><stop offset="0" stop-color="#e9e2a8" stop-opacity=".75"/><stop offset="1" stop-color="#c8c07a" stop-opacity="0"/></radialGradient>
+<radialGradient id="smog"><stop offset="0" stop-color="#2a1f17" stop-opacity=".85"/><stop offset="1" stop-color="#2a1f17" stop-opacity="0"/></radialGradient>
+<linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>`}
+function baseLayers(){const W=XMAX-XMIN;let o=`<rect x="${XMIN}" y="-1500" width="${W}" height="${SURF+1500}" fill="url(#skyBad)"/>`;
+o+=`<g mask="url(#mOk)"><rect x="${XMIN}" y="-1500" width="${W}" height="${SURF+1500}" fill="url(#skyOk)"/></g>`;
+o+=`<rect x="${XMIN}" y="${SURF}" width="${W}" height="2300" fill="url(#seaBad)"/><g mask="url(#mOk)"><rect x="${XMIN}" y="${SURF}" width="${W}" height="2300" fill="url(#seaOk)"/></g>`;
+return o}
+function terrain(){const p=[...T,[XMAX,3000],[XMIN,3000]];const d='M'+p.map(a=>a.join(',')).join('L')+'Z';return `<path d="${d}" fill="url(#terr)"/><path d="${d}" fill="url(#terrShade)"/><path d="${smooth(T)}" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="3"/>`}
+function regShore(){let o=`<ellipse cx="400" cy="250" rx="1300" ry="320" fill="url(#smog)"/><ellipse cx="1800" cy="120" rx="1400" ry="260" fill="url(#smog)"/>`;
+o+=plant(250,ty(250)+8,1.6,'#444',true);
+o+=`<path d="M380,596 L890,716" stroke="#3a3326" stroke-width="30" stroke-linecap="round"/><path d="M380,596 L890,716" stroke="#a79a55" stroke-width="12" stroke-linecap="round"/>`;
+for(let i=0;i<5;i++)o+=`<circle cx="${900+i*18}" cy="${722+i*10}" r="${50+i*20}" fill="url(#milk)" class="drift" style="animation-delay:${-i}s"/>`;
+o+=deadPalm(560,ty(560)+4,1.1,-22)+deadPalm(660,ty(660)+4,.9,18)+deadPalm(-100,ty(-100)+4,1.2,10)+deadPalm(1000,ty(1000),.7,-10);
+o+=`<g transform="translate(770,${ty(770)})"><path d="M0,0 V-64" stroke="#555" stroke-width="5"/><rect x="-46" y="-96" width="92" height="38" fill="#c33" stroke="#fff" stroke-width="2"/><text x="0" y="-80" font-size="10" font-weight="800" fill="#fff" text-anchor="middle" font-family="IBM Plex Mono">NO SWIMMING</text><text x="0" y="-65" font-size="8" fill="#fff" text-anchor="middle" font-family="IBM Plex Mono">TOXIC WATER</text></g>`;
+for(let i=0;i<14;i++){const x=R(420,880);o+=`<rect x="${x}" y="${ty(x)-8}" width="${R(8,18)}" height="7" rx="2" fill="${['#6a5a3a','#556','#7a3a2a'][i%3]}" transform="rotate(${R(-30,30)} ${x} ${ty(x)})"/>`}
+o+=`<path d="M880,${SURF-2} Q1500,${SURF-14} 2400,${SURF-1} L2400,${SURF+14} Q1500,${SURF+20} 880,${SURF+16}Z" fill="#c9bf7c" opacity=".85"/>`;
+for(let i=0;i<9;i++)o+=`<ellipse cx="${R(950,2400)}" cy="${SURF+R(2,10)}" rx="${R(30,90)}" ry="7" fill="#ded89a" opacity=".7"/>`;
+o+=boat(1600,SURF-4,1,-14,'#6a4b32');
+for(let i=0;i<6;i++)o+=deadFish(R(1050,2300),SURF+R(-2,6),1+R(0,.4));
+o+=`<g class="drift"><circle cx="1750" cy="${SURF-3}" r="8" fill="#8a3"/></g>`;return reg(-1400,2500,o)}
+function regSea(){let o='';
+for(let i=0;i<26;i++){const t=i/25,x=900+t*3000+R(-120,120),y=SURF+30+Math.pow(t,.75)*900+R(-60,60);o+=`<circle class="drift" style="animation-delay:${-R(0,9)}s" cx="${x}" cy="${y}" r="${R(70,190)}" fill="url(#milk)" opacity="${.95-t*.35}"/>`}
+for(let i=0;i<10;i++){const x=R(1200,3900);o+=deadFish(x,ty(x)-R(6,22),R(1,1.5))}
+for(let i=0;i<7;i++){const x=R(1600,3800),y=SURF+R(90,700);o+=deadFish(x,Math.min(y,ty(x)-30),1.2)}
+o+=net(2300,ty(2300)-130,260,110)+net(3300,ty(3300)-190,220,120);
+for(let i=0;i<6;i++){const x=R(1500,3800);o+=`<g transform="translate(${x},${ty(x)-14})"><rect x="-11" y="-26" width="22" height="26" rx="3" fill="#b9972a"/>${trefoil(0,-13).replace('r="18"','r="7"')}</g>`}
+o+=`<path d="${smooth(T.filter(a=>a[0]>1300&&a[0]<4400).map(a=>[a[0],a[1]-22]))}" fill="none" stroke="#c9c3a0" stroke-width="22" opacity=".55" stroke-linecap="round"/>`;
+return reg(2400,4500,o)}
+function regTrench(){let o='';
+for(let i=0;i<20;i++){const x=R(4100,6500),y=R(1500,Math.min(2500,ty(x)-40));o+=`<circle class="drift" style="animation-delay:${-R(0,9)}s" cx="${x}" cy="${y}" r="${R(80,200)}" fill="url(#milk)" opacity=".35"/>`}
+const pts=T.filter(a=>a[0]>3800&&a[0]<6500).map(a=>[a[0],a[1]-46]);o+=`<path d="${smooth(pts)}L6500,3000L3800,3000Z" fill="#b8b296" opacity=".92"/><path d="${smooth(pts)}" fill="none" stroke="#e8e2c4" stroke-width="5" opacity=".6"/>`;
+for(let i=0;i<8;i++){const x=R(4300,6200);o+=`<g transform="translate(${x},${ty(x)-48})"><rect x="-13" y="-30" width="26" height="30" rx="3" fill="#b9972a" transform="rotate(${R(-40,40)})"/>${trefoil(0,-15).replace('r="18"','r="8"')}</g>`}
+for(let i=0;i<9;i++){const x=R(4200,6300);o+=deadFish(x,ty(x)-R(54,80),R(1.2,2))}
+o+=boat(5600,ty(5600)-70,1.6,-35,'#3a3a2c');o+=net(4700,ty(4700)-260,300,180);
+const bx=5200;o+=`<g transform="translate(${bx},${ty(bx)-60})" opacity=".9"><path d="M0,0 q-8,-90 -40,-130 M0,0 q10,-70 40,-100 M0,0 q0,-80 4,-150" stroke="#665e48" stroke-width="7" fill="none"/></g>`;
+o+=`<g transform="translate(5450,1960)"><path d="M-170,0 H170" stroke="#e5694b" stroke-width="3" stroke-dasharray="10 8"/><path d="M-170,-14 V14 M170,-14 V14" stroke="#e5694b" stroke-width="3"/><text y="-22" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="46" fill="#e5694b">≈ 60 km² buried</text></g>`;
+return reg(3800,6700,o)}
+</script>
+<script>
+"use strict";
+function particles(path,n,dur,col,r){let o='';for(let i=0;i<n;i++)o+=`<circle r="${r}" fill="${col}"><animateMotion path="${path}" dur="${dur}s" begin="${-(i*dur/n).toFixed(2)}s" repeatCount="indefinite"/></circle>`;return o}
+function coral(x,y,s,c){return `<g transform="translate(${x},${y}) scale(${s})" class="swayp"><path d="M0,0 V-50 M0,-25 L-18,-52 M0,-34 L16,-62 M-18,-52 L-22,-72 M16,-62 L22,-82" stroke="${c}" stroke-width="7" fill="none" stroke-linecap="round"/></g>`}
+function grass(x,y,s){let o=`<g transform="translate(${x},${y}) scale(${s})">`;for(let i=0;i<5;i++)o+=`<path class="swayp" style="animation-delay:${-i*.5}s" d="M${i*7-14},0 q${R(-12,12)},-30 ${R(-8,8)},-${R(46,80)}" stroke="#3fae5a" stroke-width="4" fill="none" stroke-linecap="round"/>`;return o+'</g>'}
+function sailboat(x,s){return `<g transform="translate(${x},${SURF-2}) scale(${s})" class="bob"><path d="M-50,0 H60 L40,18 H-34Z" fill="#fafafa"/><path d="M0,-4 V-110 L48,-8Z" fill="#fff"/><path d="M-6,-4 V-86 L-44,-8Z" fill="#ffd166"/></g>`}
+function gull(x,y){return `<g class="drift" style="animation-delay:${-R(0,5)}s"><path d="M${x-14},${y} q7,-9 14,0 q7,-9 14,0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></g>`}
+function rays(x0,x1){let o='';for(let i=0;i<6;i++){const x=x0+i*(x1-x0)/6;o+=`<polygon class="drift" style="animation-delay:${-i*1.3}s" points="${x},${SURF} ${x+80},${SURF} ${x+260},${SURF+800} ${x+60},${SURF+800}" fill="url(#ray)" opacity=".55"/>`}return o}
+function regIsland(){let o='';
+o+=`<rect x="6860" y="630" width="1390" height="16" fill="#8d959a"/><rect x="6860" y="646" width="1390" height="6" fill="#5d666b"/>`;
+o+=`<g id="leak" style="transition:opacity 1.6s">`;for(let i=0;i<8;i++)o+=`<circle class="drift" style="animation-delay:${-i}s" cx="${6560+i*45}" cy="${760+i*30}" r="${70+i*8}" fill="url(#milk)"/>`;o+=`</g>`;
+for(const x of [6580,6680,6770]){const y=Math.max(ty(x),700);o+=`<rect x="${x-5}" y="606" width="10" height="${y-606}" fill="#6a7378"/>`}
+o+=`<g id="icp"><path d="M6520,598 H7050" stroke="#4a3d28" stroke-width="22"/><path d="M6520,598 H7050" stroke="#b09a52" stroke-width="12"/>`;
+o+=particles('M6520,598 L7040,598',9,3,'#f2e6a0',4);
+o+=`<rect x="7040" y="520" width="320" height="112" rx="6" fill="#d5dcde"/><rect x="7040" y="520" width="320" height="16" fill="#4fd6c4"/><rect x="7070" y="552" width="60" height="36" fill="#2a4a58"/><rect x="7150" y="552" width="60" height="36" fill="#2a4a58"/><rect x="7230" y="552" width="60" height="36" fill="#2a4a58"/>`;
+o+=`<rect id="gate" x="7030" y="540" width="14" height="92" fill="#e5694b"/>`;
+o+=`<text id="gOpen" x="7200" y="508" text-anchor="middle" font-family="IBM Plex Mono" font-size="16" fill="#f2b24c" font-weight="500">GATE OPEN · LEAKING</text><text id="gClosed" x="7200" y="508" text-anchor="middle" font-family="IBM Plex Mono" font-size="16" fill="#4fd6c4" font-weight="500">GATE CLOSED · DIVERTED</text>`;
+o+=`<path d="M7360,614 H7500" stroke="#5d666b" stroke-width="12"/>`+particles('M7360,614 L7500,614',4,1.6,'#d9d3b4',4);
+o+=`<rect x="7500" y="560" width="140" height="72" rx="6" fill="#9aa5ab"/><rect x="7500" y="560" width="140" height="12" fill="#f2b24c"/><text x="7570" y="608" text-anchor="middle" font-family="IBM Plex Mono" font-size="14" fill="#06141b">PRESS</text></g>`;
+for(let i=0;i<4;i++)for(let j=0;j<4-i;j++)o+=isoCube(7790+(j-(3-i)/2)*66,632-24-i*44,32,'#c8cdd0','#8e979b','#737c80');
+for(let i=0;i<3;i++)o+=isoCube(8000+i*66,632-24,32,'#c8cdd0','#8e979b','#737c80');
+o+=`<g><rect x="8170" y="400" width="14" height="232" fill="#f2b24c"/><path d="M8120,400 H8330" stroke="#f2b24c" stroke-width="9"/><path d="M8300,404 V520" stroke="#ddd" stroke-width="2"/>${isoCube(8300,550,28,'#c8cdd0','#8e979b','#737c80')}</g>`;
+o+=`<text x="6480" y="560" text-anchor="end" font-family="IBM Plex Mono" font-size="15" fill="#c8c07a">← from outfall</text>`;
+return reg(6400,8400,o)}
+function regTurbine(){let o=rays(8700,10400)+clouds(8200,10600,150,420,'#fff',.55);
+o+=`<g class="drift">${boat(8640,SURF-6,1.2,0,'#456')}</g><path d="M8640,${SURF-30} V990" stroke="#ddd" stroke-width="2" stroke-dasharray="6 5"/>${isoCube(8640,1000,24,'#c8cdd0','#8e979b','#737c80')}`;
+o+=isoCube(8900,1100,90,'#c3c9cc','#8a9296','#6e777b')+isoCube(8900,1000,56,'#4fd6c4','#2e9a90','#217a72');
+o+=turbine(8900,940,560,'#f3efe6');
+o+=turbine(9700,1190-60,440,'#cfe0e6')+isoCube(9700,1190-52,52,'#c3c9cc','#8a9296','#6e777b');
+o+=turbine(10320,1190-50,360,'#b7cfd8')+isoCube(10320,1190-44,44,'#c3c9cc','#8a9296','#6e777b');
+for(let i=0;i<14;i++){const x=R(8500,10400);o+=coral(x,ty(x)+4,R(.8,1.5),['#ff7f66','#e84a8b','#ffd166','#7bdff2'][i%4])}
+for(let i=0;i<10;i++)o+=grass(R(8500,10400),1192,R(.8,1.3));
+for(let i=0;i<12;i++)o+=fishW(R(8600,10400),R(820,1120),R(.9,1.3),['#ffb347','#4fd6c4','#ff7f66','#ffe08a'][i%4],i%2?1:-1);
+return reg(8300,10500,o)}
+function regProducts(){let o=rays(10300,12000)+clouds(10400,12400,120,400,'#fff',.55);
+o+=solarRow(10450,1166)+reefs(10050,1190)+tidal(10950,ty(10950)-34);
+o+=sailboat(10850,1);o+=`<g class="drift">${sailboat(11500,.8)}</g>`;
+o+=turbine(11350,ty(11350)-64,340,'#ecf5f7')+isoCube(11350,ty(11350)-46,46,'#c3c9cc','#8a9296','#6e777b');
+o+=breakwater(12150,ty(12150)+34,7);
+for(let i=0;i<10;i++){const x=R(10900,12400);o+=grass(x,ty(x)+4,R(.8,1.3))}
+for(let i=0;i<8;i++){const x=R(11000,12200);o+=coral(x,ty(x)+4,R(.8,1.4),['#ff7f66','#e84a8b','#ffd166'][i%3])}
+for(let i=0;i<14;i++)o+=fishW(R(10700,12300),R(780,1000),R(.9,1.4),['#ffb347','#4fd6c4','#ff7f66','#ffe08a'][i%4],i%2?1:-1);
+return reg(9900,12500,o)}
+function regBeach(){let o=`<circle cx="13900" cy="260" r="420" fill="url(#sun)"/><circle cx="13900" cy="260" r="64" fill="#fffbe6"/>`+clouds(12000,16000,160,420,'#fff',.7);
+o+=rays(11800,12500);
+o+=sailboat(12000,1.1);o+=`<g class="drift">${sailboat(12600,.7)}</g>`;
+for(let i=0;i<7;i++){const x=12700+i*150+R(-30,30);o+=palm(x,ty(x)+6,R(.9,1.3),R(-30,30),'#2f9a46',-i*.4)}
+o+=palm(14500,ty(14500)+6,1.4,-20)+palm(14700,ty(14700)+6,1.1,16);
+const hy=ty(14150);o+=`<g><rect x="13990" y="${hy-120}" width="260" height="120" fill="#f6f1e3"/><rect x="13990" y="${hy-120}" width="260" height="14" fill="#4fd6c4"/>`;for(let r=0;r<3;r++)for(let c=0;c<6;c++)o+=`<rect x="${14006+c*40}" y="${hy-98+r*30}" width="24" height="18" fill="#2f7ea8"/>`;o+=`<rect x="14250" y="${hy-80}" width="110" height="80" fill="#ebe3cf"/><rect x="13950" y="${hy-6}" width="420" height="8" fill="#b9a67a"/></g>`;
+const cols=['#e5694b','#f2b24c','#4fd6c4','#e84a8b','#7bdff2'];
+for(let i=0;i<9;i++){const x=12950+i*105+R(-20,20);o+=umbrella(x,ty(x)+2,cols[i%5])+person(x+R(25,50),ty(x+30)+4,cols[(i+2)%5],1.2)}
+o+=turbine(14800,ty(14800)-2,300,'#fff');
+o+=`<g transform="translate(13300,${ty(13300)+2})"><path d="M0,0 V-70" stroke="#7a5a36" stroke-width="6"/><rect x="-70" y="-110" width="140" height="42" rx="5" fill="#8a5a32"/><text y="-82" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="26" fill="#fff">GABÈS</text></g>`;
+for(let i=0;i<7;i++)o+=gull(R(12600,15000),R(180,420));
+for(let i=0;i<10;i++)o+=fishW(R(12000,12500),R(740,830),R(.8,1.1),['#ffb347','#4fd6c4','#ffe08a'][i%3],i%2?1:-1);
+return reg(11800,16400,o)}
+function mix(a,b,t){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+function wavesAll(){let o='';for(let x=XMIN;x<XMAX;x+=1600){const t=Math.min(1,Math.max(0,(x+800-7300)/3100));const c=mix('#9a9a50','#7fe3dc',t);o+=reg(x,x+1600,surfWaves(x,x+1600,c,.8))}return o}
+function buildWorld(){const w=$('#world');w.innerHTML=defs()+baseLayers()+`<g id="wv">${wavesAll()}</g>`+`<g id="terr">${terrain()}</g>`+`<g id="regs">${regShore()+regSea()+regTrench()+regIsland()+regTurbine()+regProducts()+regBeach()}</g>`}
+</script>
+<script>
+"use strict";
+const N=STOPS.length,reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const css=document.createElement('style');css.textContent=`#gate{transition:transform 1.4s;transform:translateY(-70px)}#icp.closed #gate{transform:none}#gClosed{opacity:0}#icp.closed #gClosed{opacity:1}#icp.closed #gOpen{opacity:0}#gOpen,#gClosed{transition:opacity .6s}#icp.closed~#leak,svg.sealed #leak{opacity:0}`;document.head.appendChild(css);
+const cam={x:STOPS[0].cx,y:STOPS[0].cy,z:STOPS[0].z,dz:0};let cur=-1,flight=null,t0=performance.now(),lastX=cam.x,lastY=cam.y;
+const world=$('#world');
+function dims(z){const asp=innerWidth/innerHeight;const h=Math.max(900,1000/asp)/z;return {w:h*asp,h}}
+function shift(){return innerWidth>760?.14:0}
+function applyCam(){const d=dims(cam.z*(1-cam.dz));const sx=Math.sin((performance.now()-t0)/2600)*8,sy=Math.cos((performance.now()-t0)/3100)*6;
+const cx=cam.x-d.w*shift()+(reduce?0:sx),cy=cam.y+(reduce?0:sy);world.setAttribute('viewBox',`${cx-d.w/2} ${cy-d.h/2} ${d.w} ${d.h}`);
+const lo=cx-d.w/2-600,hi=cx+d.w/2+600;$$('.reg').forEach(g=>{const v=+g.dataset.x1>lo&&+g.dataset.x0<hi;if(g._v!==v){g._v=v;g.style.display=v?'':'none'}})}
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function flyTo(n,instant){const s=STOPS[n];if(instant||reduce){Object.assign(cam,{x:s.cx,y:s.cy,z:s.z,dz:0});flight=null;return}
+const f={x0:cam.x,y0:cam.y,z0:cam.z,s,st:performance.now(),dur:Math.min(5200,2400+Math.hypot(s.cx-cam.x,s.cy-cam.y)*.55)};flight=f}
+function stepCam(now){if(flight){const f=flight,t=Math.min(1,(now-f.st)/f.dur),e=ease(t);cam.x=f.x0+(f.s.cx-f.x0)*e;cam.y=f.y0+(f.s.cy-f.y0)*e;cam.z=f.z0+(f.s.z-f.z0)*e;cam.dz=Math.sin(t*Math.PI)*.14;
+if(f.reveal===undefined&&t>=.62){f.reveal=1;activate(cur)}if(t>=1){flight=null;cam.dz=0}}
+applyCam();fxDraw(cam.x-lastX,cam.y-lastY);lastX=cam.x;lastY=cam.y;requestAnimationFrame(stepCam)}
+/* marine snow */
+const cv=$('#fx'),cx2=cv.getContext('2d');let P=[];
+function fxResize(){cv.width=innerWidth;cv.height=innerHeight;P=Array.from({length:90},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*2.2+.4,d:Math.random()*.9+.1}))}
+function fxDraw(dx,dy){cx2.clearRect(0,0,cv.width,cv.height);const clean=Math.min(1,Math.max(0,(cam.x-7300)/3100)),under=cam.y>760?1:.35,col=clean>.5?'255,255,255':'205,190,130';
+for(const p of P){p.x-=dx*p.d*.5;p.y-=dy*p.d*.5-.15*p.d;if(p.x<0)p.x+=cv.width;if(p.x>cv.width)p.x-=cv.width;if(p.y<0)p.y+=cv.height;if(p.y>cv.height)p.y-=cv.height;cx2.fillStyle=`rgba(${col},${.5*p.d*under})`;cx2.beginPath();cx2.arc(p.x,p.y,p.r,0,7);cx2.fill()}}
+/* navigation */
+const segs=$('#segs');for(let i=0;i<N;i++){const s=document.createElement('i');s.onclick=()=>go(i);segs.appendChild(s)}
+let timers=[];const later=(f,ms)=>timers.push(setTimeout(f,ms));
+function go(n,instant){n=Math.max(0,Math.min(N-1,n));if(n===cur&&!instant)return;
+timers.forEach(clearTimeout);timers=[];$$('.scene.active').forEach(s=>s.classList.remove('active'));
+cur=n;if(n>3){$('#icp').classList.add('closed');world.classList.add('sealed')}flyTo(n,instant);history.replaceState(null,'','#s'+(n+1));$$('#segs i').forEach((s,i)=>{s.className=i===n?'on':i<n?'done':''});$('#now').textContent=(n+1)+' / '+N;
+$('#hint').style.opacity=n?0:1;if(flight===null)activate(n)}
+function activate(n){const sc=$('#s'+(n+1));sc.classList.add('active');hook(n)}
+function hook(n){
+if(n===0){let t=0;const el=$('#tick');const iv=setInterval(()=>{t+=.162/10;el.textContent=t.toFixed(0)},100);timers.push(iv)}
+if(n===3){$('#icp').classList.remove('closed');world.classList.remove('sealed');const el=$('#tick2');let t=0;later(()=>{$('#icp').classList.add('closed');world.classList.add('sealed')},2600);const iv=setInterval(()=>{t+=.162/10;el.textContent=t.toFixed(0)},100);timers.push(iv)}
+if(n===4){const c=$('#cube');c.className='cube';later(()=>c.className='cube s1',1900);later(()=>c.className='cube s2',4000);later(()=>c.className='cube s3',6100)}
+}
+$('#peel').onclick=()=>{const c=$('#cube');if(c.classList.contains('s3'))c.classList.toggle('peel')};
+$('#cube').onclick=()=>{const c=$('#cube');const st=c.classList.contains('s3')?3:c.classList.contains('s2')?2:c.classList.contains('s1')?1:0;c.className='cube s'+((st%3)+1)};
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+$('#fs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}};
+addEventListener('keydown',e=>{if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(cur+1)}if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1)}if(e.key==='Home')go(0);if(e.key==='End')go(N-1)});
+let sx=0;addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50)go(cur+(d<0?1:-1))});
+addEventListener('resize',fxResize);
+buildWorld();fxResize();const h=parseInt((location.hash.match(/s(\d+)/)||[])[1]||1)-1;go(isNaN(h)?0:h,true);requestAnimationFrame(stepCam);
+</script></body></html>
+
+</body></html>

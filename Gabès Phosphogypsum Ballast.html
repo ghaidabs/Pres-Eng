@@ -1,0 +1,707 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Gabès Phosphogypsum Ballast</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout concept: one continuous camera move from the polluted shore out to the horizon.
+   Full-bleed illustrated scenes, copy laid over them, a slim dock for navigation. */
+:root{
+  --ink:#06141b; --deep:#0a2630; --sea:#14515e; --text:#e9f3f0; --muted:#a3bcb9;
+  --waste:#d8c27a; --warn:#f2b24c; --clean:#4fd6c4; --alarm:#e5694b;
+  --glass:rgba(6,20,27,.66); --line:rgba(255,255,255,.14);
+  --f-display:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+.stage{position:relative;height:100%;width:100%;overflow:hidden;background:var(--ink)}
+
+/* ---------- scenes: camera glide ---------- */
+.scene{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden;z-index:0;transform:scale(1.14) translateX(2%);
+  transition:opacity 0s linear 1.15s,visibility 0s linear 1.15s,transform 1.7s cubic-bezier(.2,.7,.2,1);background:var(--ink)}
+.scene.past{transform:scale(1.2) translateX(-2%)}
+.scene.future{transform:scale(.9) translateX(2%)}
+.scene.active{opacity:1;visibility:visible;z-index:2;transform:none;transition:opacity .9s ease,visibility 0s,transform 1.7s cubic-bezier(.2,.7,.2,1)}
+.scene.leaving{opacity:1;visibility:visible}
+.scene:not(.active):not(.leaving) *{animation-play-state:paused!important}
+.art{position:absolute;inset:0}
+.art svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1}
+.sc-left::after{background:linear-gradient(90deg,rgba(4,12,16,.7),rgba(4,12,16,.35) 38%,rgba(4,12,16,0) 62%)}
+.sc-top::after{background:linear-gradient(180deg,rgba(4,12,16,.72),rgba(4,12,16,.2) 34%,rgba(4,12,16,0) 52%,rgba(4,12,16,.55) 100%)}
+.sc-full::after{background:rgba(4,12,16,.62)}
+[data-d]{transform:translate(calc(var(--px,0)*var(--dd,0)*1px),calc(var(--py,0)*var(--dd,0)*.6px))}
+
+/* ---------- copy ---------- */
+.copy{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,1.6vh,18px);
+  padding-top:clamp(64px,9vh,100px);padding-bottom:clamp(84px,12vh,116px);
+  padding-left:max(clamp(20px,5vw,96px),env(safe-area-inset-left,0px));padding-right:max(clamp(20px,5vw,96px),env(safe-area-inset-right,0px));
+  overflow-y:auto;pointer-events:none;scrollbar-width:none}
+.copy::-webkit-scrollbar{display:none}
+.copy>*{pointer-events:auto;flex:none}
+.copy-left>*:not(.wide){max-width:clamp(300px,41vw,640px)}
+.copy-top{justify-content:flex-start}
+.eyebrow{margin:0;font-family:var(--f-mono);font-size:clamp(11px,.9vw,13px);letter-spacing:.16em;text-transform:uppercase;color:var(--clean)}
+.eyebrow.warn{color:var(--warn)}
+h1,h2{margin:0;font-family:var(--f-display);font-weight:700;letter-spacing:-.025em;line-height:1.02;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+h1{font-size:clamp(32px,4.7vw,78px)}
+h2{font-size:clamp(28px,3.7vw,60px)}
+.hl{color:var(--warn)} .hl-c{color:var(--clean)}
+.lede{margin:0;font-size:clamp(15px,1.3vw,20px);line-height:1.5;color:#dbe9e6;text-shadow:0 1px 14px rgba(0,0,0,.5)}
+.small{font-size:clamp(12px,.95vw,14px);color:var(--muted)}
+.stats.wide{max-width:min(780px,100%)}
+.stats{display:flex;flex-wrap:wrap;gap:clamp(14px,2.2vw,36px);margin:0}
+.stats div{min-width:0}
+.stats dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stats dd{margin:2px 0 0;font-family:var(--f-display);font-weight:650;font-size:clamp(20px,2.1vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ticker{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.ticker b{color:var(--warn);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;min-width:4ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:rgba(6,20,27,.55);backdrop-filter:blur(6px);padding:5px 11px;border-radius:99px;font-size:clamp(12px,.95vw,14px);color:var(--text)}
+.chip.c{border-color:rgba(79,214,196,.5);color:var(--clean)}
+.note{border-left:3px solid var(--warn);padding:8px 14px;background:rgba(6,20,27,.6);font-size:clamp(13px,1vw,15px);color:#e8e2cf;backdrop-filter:blur(6px)}
+.ph{border-bottom:1px dashed var(--warn);color:#ffe3ae;white-space:nowrap}
+.a{opacity:0}
+.scene:is(.active,.leaving) .a{animation:rise .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0)*1s + .3s)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:clamp(10px,1.2vw,18px);margin-top:auto}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:6px;padding:clamp(12px,1.3vw,20px);min-width:0}
+.card h3{margin:0 0 4px;font-family:var(--f-display);font-size:clamp(15px,1.25vw,19px);font-weight:650;letter-spacing:-.01em}
+.card p{margin:0;font-size:clamp(12px,.95vw,14.5px);color:#c9dbd8;line-height:1.4}
+.card .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.big{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3vw,48px);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;margin:6px 0 6px;color:var(--warn)}
+.big small{font-size:.42em;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
+.ico{width:clamp(34px,3.2vw,48px);height:auto;display:block;margin-bottom:6px;overflow:visible}
+.strike{text-decoration:line-through;text-decoration-color:var(--alarm);color:var(--muted);font-size:.7em;margin-right:6px}
+.tag{display:inline-block;margin-top:8px;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;padding:2px 8px;border-radius:3px;background:rgba(242,178,76,.16);color:var(--warn)}
+.bar{display:flex;gap:3px;height:34px;margin-top:10px;clip-path:inset(0 100% 0 0)}
+.scene:is(.active,.leaving) .bar{animation:wipe 1.5s cubic-bezier(.3,.7,.2,1) 1.2s both}
+@keyframes wipe{to{clip-path:inset(0 0 0 0)}}
+.bar span{flex:var(--w) 1 0;min-width:0;display:flex;align-items:center;padding:0 10px;font-size:12px;font-family:var(--f-mono);white-space:nowrap;overflow:hidden;color:#06141b;font-weight:500}
+.total{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.total b{font-family:var(--f-display);font-size:clamp(26px,3vw,46px);color:var(--warn);letter-spacing:-.03em}
+
+/* ---------- 3D module ---------- */
+.scene:is(.active,.leaving) .cubewrap{animation:fadein 1.2s ease .4s both}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.cubewrap{opacity:0;--W:min(44vw,62vh);position:absolute;z-index:2;right:max(5vw,env(safe-area-inset-right,0px));top:46%;width:var(--W);height:var(--W);transform:translateY(-50%);perspective:1500px;pointer-events:none}
+.rig{position:absolute;inset:0;transform-style:preserve-3d;animation:rig 30s linear infinite}
+@keyframes rig{from{transform:rotateX(-24deg) rotateY(-30deg)}to{transform:rotateX(-24deg) rotateY(330deg)}}
+.cube{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.2,.8,.2,1),opacity .9s}
+.cube .f{position:absolute;inset:0}
+.f.fr{transform:translateZ(calc(var(--s)/2))} .f.bk{transform:rotateY(180deg) translateZ(calc(var(--s)/2))}
+.f.rt{transform:rotateY(90deg) translateZ(calc(var(--s)/2))} .f.lf{transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}
+.f.tp{transform:rotateX(90deg) translateZ(calc(var(--s)/2))} .f.bt{transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
+.core{--s:calc(var(--W)*.3)}
+.core .f{background:radial-gradient(circle at 20% 30%,#c9b57a 0 3px,transparent 4px),radial-gradient(circle at 70% 60%,#a89560 0 4px,transparent 5px),radial-gradient(circle at 45% 80%,#d9c88f 0 3px,transparent 4px),#8f7f55;background-size:26px 26px,31px 31px,22px 22px,auto;border:1px solid rgba(0,0,0,.25)}
+.core .f::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity 1s;background:linear-gradient(135deg,#6f8f8c,#456a6b);box-shadow:inset 0 0 28px rgba(79,214,196,.65)}
+.wrap[data-stage="1"] .core .f::after,.wrap[data-stage="2"] .core .f::after,.wrap[data-stage="3"] .core .f::after{opacity:1}
+.liner{--s:calc(var(--W)*.4);opacity:0;transform:scale(1.7)}
+.liner .f{background:rgba(20,70,98,.5);border:2px solid rgba(79,214,196,.85);box-shadow:inset 0 0 30px rgba(79,214,196,.25),0 0 18px rgba(79,214,196,.2)}
+.shell{--s:calc(var(--W)*.5);opacity:0;transform:scale(1.8)}
+.shell .f{background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 24px),repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 1px,transparent 1px 24px),linear-gradient(135deg,#a5aeae,#6c777a);border:2px solid rgba(255,255,255,.28);box-shadow:inset 0 0 40px rgba(0,0,0,.25);transition:opacity .9s}
+.wrap[data-stage="2"] .liner,.wrap[data-stage="3"] .liner{opacity:1;transform:none}
+.wrap[data-stage="3"] .shell{opacity:1;transform:none}
+.wrap[data-peel="1"] .shell .f{opacity:.12}
+.wrap[data-peel="1"] .liner .f{opacity:.55}
+.floor{position:absolute;left:50%;bottom:6%;width:70%;height:12%;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(79,214,196,.28),transparent 68%)}
+.cap{position:absolute;left:0;right:0;bottom:-2%;text-align:center;font-family:var(--f-mono);font-size:clamp(11px,.95vw,14px);letter-spacing:.06em;color:var(--clean);pointer-events:none}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:10px 14px 10px 10px;border:1px solid var(--line);border-radius:6px;background:rgba(6,20,27,.55);backdrop-filter:blur(6px);cursor:pointer;transition:border-color .4s,background .4s;text-align:left}
+.steps li .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;border:1px solid var(--line);color:var(--muted);transition:all .4s}
+.steps li b{display:block;font-family:var(--f-display);font-size:clamp(15px,1.25vw,19px);font-weight:650}
+.steps li span.d{font-size:clamp(12px,.95vw,14px);color:#c1d5d2}
+.steps li.on{border-color:rgba(79,214,196,.7);background:rgba(10,50,56,.7)}
+.steps li.on .n{background:var(--clean);color:#06141b;border-color:var(--clean)}
+.btn{pointer-events:auto;border:1px solid rgba(79,214,196,.6);background:rgba(10,50,56,.6);color:var(--clean);padding:7px 14px;border-radius:99px;font-size:13px;font-family:var(--f-mono);letter-spacing:.04em}
+.btn:hover{background:rgba(79,214,196,.18)}
+.cubebtn{position:absolute;z-index:4;right:max(5vw,env(safe-area-inset-right,0px));bottom:clamp(70px,11vh,100px)}
+
+/* ---------- svg motion ---------- */
+.wv{animation:wv 9s linear infinite}
+@keyframes wv{to{transform:translateX(-80px)}}
+.blob{animation:drift 11s linear infinite;transform-box:fill-box;transform-origin:center;opacity:0}
+@keyframes drift{0%{transform:translate(0,0) scale(.25);opacity:0}14%{opacity:.85}100%{transform:translate(var(--tx),var(--ty)) scale(var(--sc,1.6));opacity:0}}
+.sway{animation:sway 6s ease-in-out infinite alternate;transform-origin:0 0}
+@keyframes sway{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+.rotor{transform-origin:0 0;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.smoke{animation:smoke 9s linear infinite;transform-box:fill-box;transform-origin:center;opacity:0}
+@keyframes smoke{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:.7}100%{transform:translate(-140px,-120px) scale(2.2);opacity:0}}
+.cloud{animation:cloud 90s linear infinite alternate}
+@keyframes cloud{to{transform:translateX(160px)}}
+.glint{animation:glint 3.4s ease-in-out infinite alternate}
+@keyframes glint{from{opacity:.35}to{opacity:.9}}
+.bob{animation:bob 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(5px) rotate(1.5deg)}}
+.foam{stroke-dasharray:18 22;animation:foam 6s linear infinite}
+@keyframes foam{to{stroke-dashoffset:-80}}
+.fish{animation:fish 26s linear infinite;opacity:.85}
+@keyframes fish{from{transform:translateX(-120px)}to{transform:translateX(1760px)}}
+.fishr{animation:fishr 34s linear infinite;opacity:.8}
+@keyframes fishr{from{transform:translateX(1760px) scaleX(-1)}to{transform:translateX(-120px) scaleX(-1)}}
+.grass{animation:grass 3.6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes grass{from{transform:rotate(-5deg)}to{transform:rotate(6deg)}}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.ring{animation:ring 2.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ring{from{transform:scale(.4);opacity:.9}to{transform:scale(2.6);opacity:0}}
+.ray{animation:ray 7s ease-in-out infinite alternate}
+@keyframes ray{from{opacity:.25}to{opacity:.7}}
+.cam{animation:none}
+.scene:is(.active,.leaving) .cam{animation:dive 5.2s cubic-bezier(.65,0,.25,1) .9s both}
+@keyframes dive{from{transform:translateY(0)}to{transform:translateY(-420px)}}
+.spray{animation:spray 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center;opacity:0}
+@keyframes spray{0%{transform:translate(0,0);opacity:0}15%{opacity:.9}100%{transform:translate(var(--sx),-60px);opacity:0}}
+.dust{animation:dust 14s linear infinite;opacity:0}
+@keyframes dust{0%{transform:translateY(0);opacity:0}20%{opacity:.5}100%{transform:translateY(-220px);opacity:0}}
+.flick{animation:flick 5s steps(1) infinite}
+@keyframes flick{0%{opacity:1}30%{opacity:.15}45%{opacity:1}70%{opacity:.15}}
+.gate{transform:translateY(-46px);transition:transform .5s cubic-bezier(.6,0,.4,1)}
+.closed .gate{transform:none}
+.sea-plume{transition:opacity 2.2s}
+.closed .sea-plume{opacity:0}
+.clean-water{opacity:0;transition:opacity 3s}
+.closed .clean-water{opacity:1}
+.cake{opacity:0;transition:opacity .6s,transform .8s;transform:translateX(-24px)}
+.closed .cake{opacity:1;transform:none}
+.closed .cake:nth-of-type(2){transition-delay:.5s}.closed .cake:nth-of-type(3){transition-delay:1s}
+.lamp{fill:#e5694b;transition:fill .4s}
+.closed .lamp{fill:#4fd6c4}
+.pin{opacity:0;transform:scale(.4);transform-box:fill-box;transform-origin:center;transition:opacity .5s,transform .6s cubic-bezier(.3,1.6,.5,1)}
+.pin.on{opacity:1;transform:none}
+.road .card{opacity:.28;transform:translateY(10px);transition:opacity .7s,transform .7s,border-color .7s}
+.road .card.on{opacity:1;transform:none;border-color:rgba(79,214,196,.6)}
+.t7{font-family:var(--f-body);fill:#e9f3f0;font-size:22px}
+.t7s{font-family:var(--f-mono);fill:#a3bcb9;font-size:15px;letter-spacing:.04em}
+.t7b{font-family:var(--f-display);fill:#e9f3f0;font-size:26px;font-weight:650}
+.tl{font-family:var(--f-body);fill:#e9f3f0;font-size:20px}
+.tl2{font-family:var(--f-mono);fill:#a3bcb9;font-size:14px}
+
+/* ---------- trust / team ---------- */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(18px,3vw,56px);align-items:start}
+.trust{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.trust li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.trust svg{width:30px;height:30px}
+.trust b{font-family:var(--f-display);font-size:clamp(15px,1.3vw,20px);font-weight:650;display:block}
+.trust span{font-size:clamp(12px,.98vw,14.5px);color:#c9dbd8}
+.team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,1vw,14px)}
+.person{background:var(--glass);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0;backdrop-filter:blur(8px)}
+.avatar{width:44px;height:44px;border-radius:50%;border:1px dashed rgba(242,178,76,.7);display:grid;place-items:center;font-family:var(--f-mono);color:var(--warn);margin-bottom:8px}
+.person b{display:block;font-size:clamp(13px,1.05vw,15px);font-weight:600}
+.person span{font-size:clamp(11px,.9vw,13px);color:var(--muted);display:block;line-height:1.3}
+.person .when{margin-top:6px;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--clean)}
+.funds{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.funds li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 0;font-size:clamp(13px,1.05vw,16px)}
+.funds li i{font-style:normal;font-family:var(--f-mono);color:var(--warn)}
+.miles{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.miles li{display:grid;grid-template-columns:78px 1fr;gap:10px;font-size:clamp(13px,1.05vw,16px)}
+.miles li i{font-style:normal;font-family:var(--f-mono);font-size:12px;color:var(--clean);padding-top:2px}
+
+/* ---------- chrome ---------- */
+.brand{position:fixed;z-index:20;top:max(14px,env(safe-area-inset-top,0px));left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px;pointer-events:none}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.02em}
+.brand span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.dock{position:fixed;z-index:20;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.4vw,18px);
+  padding-top:30px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:linear-gradient(0deg,rgba(4,12,16,.8),rgba(4,12,16,0))}
+.nb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(6,20,27,.65);backdrop-filter:blur(6px);display:grid;place-items:center;font-size:16px;line-height:1}
+.nb:hover{border-color:var(--clean);color:var(--clean)}
+.nb:focus-visible,.seg:focus-visible,.steps li:focus-visible,.btn:focus-visible{outline:2px solid var(--clean);outline-offset:3px}
+.segs{display:flex;gap:6px;min-width:0}
+.seg{width:clamp(16px,3.4vw,52px);height:22px;padding:0;border:0;background:none;position:relative}
+.seg i{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);overflow:hidden;transition:background .4s}
+.seg:hover i{background:rgba(255,255,255,.45)}
+.seg.on i{background:var(--clean)}
+.seg.done i{background:rgba(79,214,196,.5)}
+.now{position:absolute;left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));bottom:max(22px,env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+.fs{position:absolute;right:max(clamp(16px,2.2vw,32px),env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px))}
+.hint{position:fixed;z-index:20;left:50%;bottom:64px;transform:translateX(-50%);font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);transition:opacity 1s;pointer-events:none;white-space:nowrap}
+
+@media (max-width:900px){
+  .copy{justify-content:flex-start;padding-top:70px}
+  .steps li .d,#s4 .lede{display:none}
+  .cubewrap{--W:min(72vw,36vh)}
+  .g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+  .team{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .copy-left>*:not(.wide){max-width:100%}
+  .cubewrap{right:auto;left:50%;top:auto;bottom:88px;transform:translate(-50%,0)}
+  .cubebtn{display:none}
+  .now,.hint{display:none}
+  .sc-left::after{background:linear-gradient(180deg,rgba(4,12,16,.78),rgba(4,12,16,.5) 60%,rgba(4,12,16,.2))}
+  .fs{display:none}
+  .stats dd{font-size:20px}
+  .brand span{display:none}
+}
+@media (max-width:900px) and (max-height:760px){.card p,.person span{display:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <radialGradient id="plume"><stop offset="0" stop-color="#e6dca0" stop-opacity="1"/><stop offset=".55" stop-color="#d4c98a" stop-opacity=".55"/><stop offset="1" stop-color="#d4cc9c" stop-opacity="0"/></radialGradient>
+  <radialGradient id="smk"><stop offset="0" stop-color="#9a958c" stop-opacity=".75"/><stop offset="1" stop-color="#9a958c" stop-opacity="0"/></radialGradient>
+  <radialGradient id="glowW"><stop offset="0" stop-color="#ffc98a" stop-opacity=".9"/><stop offset=".4" stop-color="#ffb070" stop-opacity=".3"/><stop offset="1" stop-color="#ffb070" stop-opacity="0"/></radialGradient>
+  <radialGradient id="glowC"><stop offset="0" stop-color="#bff5ee" stop-opacity=".9"/><stop offset=".4" stop-color="#8fe3da" stop-opacity=".3"/><stop offset="1" stop-color="#8fe3da" stop-opacity="0"/></radialGradient>
+  <radialGradient id="cl"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <linearGradient id="conc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7c898c"/><stop offset=".4" stop-color="#b3bdbe"/><stop offset="1" stop-color="#6b777a"/></linearGradient>
+</defs></svg>
+
+<header class="brand"><b>Gabès Phosphogypsum Ballast</b><span>Investor pitch · <span class="ph">[Company name]</span></span></header>
+
+<main class="stage" id="stage">
+
+<!-- 1 THE SHORE -->
+<section class="scene sc-left" id="s1" data-name="The shore">
+  <div class="art"></div>
+  <div class="copy copy-left">
+    <p class="eyebrow warn a" style="--d:.1">Gulf of Gabès · Tunisia</p>
+    <h1 class="a" style="--d:.25">Every day, <span class="hl">14,000 tonnes</span> of waste reach this sea.</h1>
+    <p class="lede a" style="--d:.45">Phosphogypsum from the fertilizer plant has been discharged here for 50 years. No cleanup, reuse or closure plan has been carried out.</p>
+    <dl class="stats wide a" style="--d:.65">
+      <div><dt>Per day</dt><dd>12,500–15,000 t</dd></div>
+      <div><dt>Per year</dt><dd>≈ 4 million t</dd></div>
+      <div><dt>Accumulated</dt><dd>70–200+ Mt</dd></div>
+    </dl>
+    <p class="ticker a" style="--d:.85">Discharged since this scene opened <b id="tick">0.0</b> tonnes</p>
+  </div>
+</section>
+
+<!-- 2 WHO PAYS -->
+<section class="scene sc-top" id="s2" data-name="Who pays">
+  <div class="art"></div>
+  <div class="copy copy-top">
+    <p class="eyebrow warn a" style="--d:.1">The damage, by who pays</p>
+    <h2 class="a" style="--d:.2">The sea is not the only thing that pays.</h2>
+    <div class="grid g4 a" style="--d:.5">
+      <div class="card">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="#f2b24c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><g class="bob"><path d="M6 28h36l-5 9H12z"/><path d="M24 8v20M24 10l12 16H24"/></g><path d="M4 42q5-4 10 0t10 0 10 0 10 0" stroke="#4fd6c4" stroke-opacity=".7"/></svg>
+        <span class="k">Fishers</span>
+        <div class="big"><span data-count="47">47</span>%<small>of the loss</small></div>
+        <p>The largest share of the yearly cost. Daily catch income fell from up to <b>700</b> to about <b>20 TND</b>.</p>
+      </div>
+      <div class="card">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="#f2b24c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="8" width="28" height="32"/><path d="M4 40h40"/><g fill="#f2b24c" stroke="none"><rect class="flick" x="15" y="13" width="5" height="5"/><rect class="flick" style="animation-delay:-1.4s" x="28" y="13" width="5" height="5"/><rect class="flick" style="animation-delay:-2.7s" x="15" y="23" width="5" height="5"/><rect class="flick" style="animation-delay:-.6s" x="28" y="23" width="5" height="5"/></g></svg>
+        <span class="k">Tourism and hotels</span>
+        <div class="big"><span data-count="25">25</span> M<small>TND a year</small></div>
+        <p>Occupancy stays well below neighbouring regions. The beaches carry the visible plume.</p>
+        <span class="tag">33%</span>
+      </div>
+      <div class="card">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="#f2b24c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M24 15v18M15 24h18"/><circle class="ring" cx="24" cy="24" r="17" stroke="#e5694b"/></svg>
+        <span class="k">Health system</span>
+        <div class="big"><span data-count="10">10</span> M<small>TND a year</small></div>
+        <p>Extra burden on care. A 2018 EU study found a correlation with bronchitis and asthma in three neighbourhoods.</p>
+        <span class="tag">13%</span>
+      </div>
+      <div class="card">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="#f2b24c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 40h40"/><path d="M14 40V22q-5-4-6-10M14 30q6-2 8-8M34 40V20q4-3 5-9M34 32q-5-2-7-8"/></svg>
+        <span class="k">Farmers</span>
+        <div class="big"><span data-count="5">5</span> M<small>TND a year</small></div>
+        <p>Lower productivity and abandoned plots.</p>
+        <span class="tag">7%</span>
+      </div>
+    </div>
+    <div class="a" style="--d:.8;margin-top:auto">
+      <div class="total"><b><span data-count="76">76</span> M TND a year</b><span class="small">2015 only, about 200 TND per inhabitant. Not every harm is counted, so treat it as a floor.</span></div>
+      <div class="bar"><span style="--w:47;background:#f2b24c">Fishing 47%</span><span style="--w:33;background:#e5694b">Tourism 33%</span><span style="--w:13;background:#d8c27a">Health 13%</span><span style="--w:7;background:#a8bdb8"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 INTERCEPT -->
+<section class="scene sc-left" id="s3" data-name="Intercept">
+  <div class="art"></div>
+  <div class="copy copy-left copy-top">
+    <p class="eyebrow a" style="--d:.1">Our answer · Step 1</p>
+    <h2 class="a" style="--d:.2">Stop it before it reaches the sea.</h2>
+    <p class="lede a" style="--d:.4">We take fresh slurry at the plant outlet, before discharge. This is the step that actually reduces what enters the gulf.</p>
+    <div class="chips a" style="--d:.6"><span class="chip c">Agreement with GCT and the state needed</span></div>
+    <p class="note a" style="--d:.8;margin-top:auto">Scope: solid phosphogypsum only. The gas emissions behind the 2025 protests are a separate problem, and we do not claim to fix them.</p>
+  </div>
+</section>
+
+<!-- 4 THE MODULE -->
+<section class="scene sc-left" id="s4" data-name="The module">
+  <div class="art"></div>
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.1">Our answer · Step 2</p>
+    <h2 class="a" style="--d:.2">Turn loose waste into a sealed block.</h2>
+    <ol class="steps a" style="--d:.45" id="steps">
+      <li tabindex="0" data-st="0"><span class="n">1</span><div><b>Dewater and measure</b><span class="d">Filter presses make solid cake. Every batch is tested for radium and metals by gamma spectrometry.</span></div></li>
+      <li tabindex="0" data-st="1"><span class="n">2</span><div><b>Stabilize</b><span class="d">A binder locks contaminants into a solid and cuts leaching and radon release.</span></div></li>
+      <li tabindex="0" data-st="2"><span class="n">3</span><div><b>Encapsulate</b><span class="d">An HDPE liner, then a marine-grade concrete shell. Cured, tested and certified before it ships.</span></div></li>
+    </ol>
+    <p class="lede a" style="--d:.7">Three barriers: binder, liner, shell. No single failure causes a release.</p>
+  </div>
+  <div class="cubewrap wrap" id="wrap" data-stage="0">
+    <div class="floor"></div>
+    <div class="rig">
+      <div class="cube core"><i class="f fr"></i><i class="f bk"></i><i class="f rt"></i><i class="f lf"></i><i class="f tp"></i><i class="f bt"></i></div>
+      <div class="cube liner"><i class="f fr"></i><i class="f bk"></i><i class="f rt"></i><i class="f lf"></i><i class="f tp"></i><i class="f bt"></i></div>
+      <div class="cube shell"><i class="f fr"></i><i class="f bk"></i><i class="f rt"></i><i class="f lf"></i><i class="f tp"></i><i class="f bt"></i></div>
+    </div>
+    <div class="cap" id="cap"></div>
+  </div>
+  <button class="btn cubebtn" id="peel" type="button">See inside</button>
+</section>
+
+<!-- 5 THE TURBINE -->
+<section class="scene sc-left" id="s5" data-name="The turbine">
+  <div class="art"></div>
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.2">Product 1 · Wind foundation ballast</p>
+    <h2 class="a" style="--d:.35">It starts with a turbine.</h2>
+    <p class="lede a" style="--d:.55">Offshore gravity bases need cheap, heavy, permanent mass. Our module fills the foundation and never touches open water.</p>
+    <dl class="stats wide a" style="--d:.75">
+      <div><dt>Ballast, one large base</dt><dd>19–27 kt</dd></div>
+      <div><dt>Plant discharge absorbed</dt><dd>≈ 2 days</dd></div>
+    </dl>
+    <div class="chips a" style="--d:.95"><span class="chip c">Gravity base</span><span class="chip c">Fully removable</span><span class="chip">Shallow shelf (to verify)</span></div>
+    <p class="small a" style="--d:1.1">Our entry product and our proof, not the whole answer.</p>
+  </div>
+</section>
+
+<!-- 6 THE HORIZON -->
+<section class="scene sc-top" id="s6" data-name="The horizon">
+  <div class="art"></div>
+  <div class="copy copy-top">
+    <p class="eyebrow a" style="--d:.1">Then the horizon opens</p>
+    <h2 class="a" style="--d:.2">Same module, more places to put it.</h2>
+    <div class="grid g3" style="margin-top:auto">
+      <div class="card a" style="--d:1.4"><span class="k">Product 2</span><h3>Breakwater and reef-base blocks</h3><p>Coastal defence, underwater. First buyer: coastal and port authorities.</p></div>
+      <div class="card a" style="--d:2.2"><span class="k">Product 3</span><h3>Anchor and sinker blocks</h3><p>Seabed anchors for floating solar, buoys, platforms. First buyer: floating solar and marine energy developers.</p></div>
+      <div class="card a" style="--d:3"><span class="k">Product 4</span><h3>Tidal and wave device foundations</h3><p>Same logic as wind gravity bases. First buyer: marine energy startups.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 BUSINESS MODEL -->
+<section class="scene sc-top" id="s7" data-name="Business model">
+  <div class="art"></div>
+  <div class="copy copy-top">
+    <p class="eyebrow a" style="--d:.1">Business model</p>
+    <h2 class="a" style="--d:.2">One tonne, two payers.</h2>
+    <p class="lede a" style="--d:.4" >We are paid to take the waste away, and paid again for the certified module we make from it.</p>
+    <div class="chips a" style="margin-top:auto;--d:1.2"><span class="chip">Also: monitoring-as-a-service contracts</span><span class="chip">Grants for pilots and R&amp;D</span><span class="chip">Prices to be set from real quotes: <span class="ph">[€ / tonne]</span></span></div>
+  </div>
+</section>
+
+<!-- 8 THE ROAD -->
+<section class="scene sc-top road" id="s8" data-name="The road">
+  <div class="art"></div>
+  <div class="copy copy-top">
+    <p class="eyebrow a" style="--d:.1">The road to the first turbine</p>
+    <h2 class="a" style="--d:.2">Five gates between here and the horizon.</h2>
+    <div class="grid g5" style="margin-top:auto" id="roadcards">
+      <div class="card"><span class="k">Months 0–12</span><h3>Lab and mesocosm</h3><p>Recipes, leach, radon and seawater-aging tests. Gate: results published, pass criteria met.</p></div>
+      <div class="card"><span class="k">Months 9–24</span><h3>Land test blocks</h3><p>Sealed modules with sensors on a controlled site. Gate: a clean year of data.</p></div>
+      <div class="card"><span class="k">Months 24–42</span><h3>Nearshore pilot</h3><p>Anchor or breakwater blocks in shallow water, fishers present. Gate: regulator sign-off.</p></div>
+      <div class="card"><span class="k">Months 36–60</span><h3>Flagship turbine</h3><p>Gravity-base foundation with a maker and a developer. Gate: novel-material certification.</p></div>
+      <div class="card"><span class="k">Year 5 onward</span><h3>Scale and diversify</h3><p>Several foundations, breakwaters and anchor blocks running together.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 TRUST AND TEAM -->
+<section class="scene sc-full" id="s9" data-name="Trust and team">
+  <div class="art"></div>
+  <div class="copy">
+    <div class="two">
+      <div>
+        <p class="eyebrow a" style="--d:.1">Earning trust</p>
+        <h2 class="a" style="--d:.2;margin-bottom:16px">We measure. Everyone can see.</h2>
+        <ul class="trust a" style="--d:.5">
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="15" cy="15" r="10"/><path d="M15 9v6l4 3"/></svg><div><b>Independent measurement</b><span>A third-party lab tests every batch. Results go on a public dashboard.</span></div></li>
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="11" r="4"/><circle cx="21" cy="11" r="4"/><path d="M3 24q7-9 14 0M13 24q7-9 14 0"/></svg><div><b>Fishers at the table</b><span>A community board of fishers and residents reviews monitoring and can trigger inspections.</span></div></li>
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l9 4v7q0 7-9 11-9-4-9-11V8z"/><path d="M11 15l3 3 5-6"/></svg><div><b>A removal guarantee</b><span>If monitoring fails, we retrieve the modules, funded by a reserve held outside the company.</span></div></li>
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="15" cy="15" r="10"/><path d="M8 22L22 8"/></svg><div><b>No cover for pollution</b><span>This complements ending the discharge. It does not replace it.</span></div></li>
+        </ul>
+      </div>
+      <div>
+        <p class="eyebrow a" style="--d:.3">Who builds it</p>
+        <div class="team a" style="--d:.5;margin-top:12px">
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>CEO and founder</span><span class="when">Now</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>CTO, materials and chemical engineer</span><span class="when">Now</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Radiological safety officer</span><span class="when">Now</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Marine and structural engineer</span><span class="when">Months 0–6</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Environmental scientist</span><span class="when">Months 0–6</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Regulatory and legal counsel</span><span class="when">Months 0–6</span></div>
+        </div>
+        <p class="small a" style="--d:.8;margin:12px 0 0">Backed by a university materials lab <span class="ph">[partner]</span> and an independent scientific committee that reviews our data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 THE ASK -->
+<section class="scene sc-left" id="s10" data-name="The ask">
+  <div class="art"></div>
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.1">The ask</p>
+    <h2 class="a" style="--d:.2">Fund the first proof.</h2>
+    <p class="lede a" style="--d:.4"><span class="ph">[€ X million]</span> takes us from the lab to a monitored nearshore pilot, and sets up the first turbine foundation.</p>
+    <ul class="funds a wide" style="--d:.6;max-width:min(520px,100%)">
+      <li>Lab and mesocosm tests <i>[XX%]</i></li><li>Land test blocks <i>[XX%]</i></li><li>Nearshore pilot <i>[XX%]</i></li><li>Team, certification and monitoring reserve <i>[XX%]</i></li>
+    </ul>
+    <ul class="miles a wide" style="--d:.85;max-width:min(560px,100%)">
+      <li><i>Month 12</i><span>Results published, pass criteria met</span></li>
+      <li><i>Month 24</i><span>A full year of land-test data</span></li>
+      <li><i>Month 42</i><span>Regulator-signed nearshore pilot</span></li>
+      <li><i>Month 60</i><span>Flagship gravity-base turbine foundation</span></li>
+    </ul>
+    <p class="small a" style="--d:1.05">Placeholder projection: about 1.5% of the yearly discharge handled by year 5. We start with proof, then scale. Contact: <span class="ph">[name · email]</span></p>
+  </div>
+</section>
+
+</main>
+
+<nav class="dock" aria-label="Scenes">
+  <span class="now" id="now"></span>
+  <button class="nb" id="prev" type="button" aria-label="Previous scene">←</button>
+  <div class="segs" id="segs"></div>
+  <button class="nb" id="next" type="button" aria-label="Next scene">→</button>
+  <button class="nb fs" id="fs" type="button" aria-label="Fullscreen">⤢</button>
+</nav>
+<div class="hint" id="hint">← → keys, swipe, or the arrows</div>
+
+<script>
+/* ============ helpers ============ */
+let seed=7;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const R=(a,b)=>a+rnd()*(b-a);const f=n=>Math.round(n*10)/10;const $=s=>document.querySelector(s);
+const open=cls=>`<svg class="${cls||''}" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">`;
+const stops=a=>a.map((c,i)=>`<stop offset="${i/(a.length-1)}" stop-color="${c}"/>`).join('');
+const lg=(id,cols,v=true)=>`<linearGradient id="${id}" x1="0" y1="0" x2="${v?0:1}" y2="${v?1:0}">${stops(cols)}</linearGradient>`;
+
+function waves(y0,y1,n,col,op){let s='';for(let i=0;i<n;i++){const k=n>1?i/(n-1):0;const y=y0+(y1-y0)*Math.pow(k,1.7);const amp=2+k*9;let d=`M-120 ${f(y)} q20 ${-f(amp)} 40 0`;for(let j=0;j<45;j++)d+=' t40 0';
+  s+=`<path class="wv" d="${d}" fill="none" stroke="${col}" stroke-opacity="${f(op*(.4+k*.6))}" stroke-width="${f(.8+k*2.2)}" style="animation-duration:${f(R(7,13)-k*3)}s;animation-delay:${-f(R(0,10))}s"/>`}return s}
+function palm(x,y,s,lean,col,delay){const tx=lean*120*s,ty=-230*s;let fr='';[-165,-130,-98,-62,-26,8,38,172,208].forEach(a=>{fr+=`<path d="M0 0 Q60 -55 150 -15 Q70 -28 0 0Z" fill="${col}" transform="rotate(${a}) scale(${s})"/>`});
+  return `<g transform="translate(${x} ${y})"><g class="sway" style="animation-delay:${delay}s"><path d="M0 0 Q${f(tx*.2)} ${f(ty*.5)} ${f(tx)} ${f(ty)}" stroke="${col}" stroke-width="${f(11*s)}" fill="none" stroke-linecap="round"/><g transform="translate(${f(tx)} ${f(ty)})">${fr}</g></g></g>`}
+function turbine(x,y,h,col,spin){const w=h*.03,L=h*.52;const bl=[0,120,240].map(a=>`<path d="M0 0 L${f(-L*.05)} ${f(-L*.16)} L0 ${f(-L)} L${f(L*.035)} ${f(-L*.16)}Z" fill="${col}" transform="rotate(${a})"/>`).join('');
+  return `<g transform="translate(${x} ${y})"><path d="M${f(-w)} 0 L${f(-w*.45)} ${-h} L${f(w*.45)} ${-h} L${f(w)} 0Z" fill="${col}"/><g transform="translate(0 ${-h})"><rect x="${f(-w*.7)}" y="${f(-w*.7)}" width="${f(w*2.6)}" height="${f(w*1.4)}" rx="${f(w*.3)}" fill="${col}"/><g class="rotor" style="animation-duration:${spin}s">${bl}<circle r="${f(w*.9)}" fill="${col}"/></g></g></g>`}
+function plant(x,y,s,col,smoke){let sm='';if(smoke)for(let i=0;i<5;i++)sm+=`<circle class="smoke" cx="${-70+(i%2)*34}" cy="-215" r="26" fill="url(#smk)" style="animation-delay:${-i*1.8}s"/>`;
+  return `<g transform="translate(${x} ${y}) scale(${s})" fill="${col}"><rect x="-120" y="-80" width="150" height="80"/><rect x="30" y="-52" width="110" height="52"/><rect x="-196" y="-46" width="58" height="46" rx="6"/><rect x="-92" y="-212" width="16" height="132"/><rect x="-58" y="-184" width="14" height="104"/><rect x="-22" y="-198" width="15" height="118"/><rect x="60" y="-70" width="8" height="20"/>
+  <g fill="#f2b24c" opacity=".8"><rect x="-104" y="-62" width="10" height="7"/><rect x="-82" y="-62" width="10" height="7"/><rect x="-60" y="-62" width="10" height="7"/><rect x="48" y="-34" width="10" height="7"/><rect x="72" y="-34" width="10" height="7"/></g>${sm}</g>`}
+function isoCube(cx,cy,s,t,l,r){const a=s*.866,b=s*.5,h=s;return `<polygon points="${cx},${cy-h-b} ${cx+a},${cy-h} ${cx},${cy-h+b} ${cx-a},${cy-h}" fill="${t}"/><polygon points="${cx-a},${cy-h} ${cx},${cy-h+b} ${cx},${cy+b} ${cx-a},${cy}" fill="${l}"/><polygon points="${cx+a},${cy-h} ${cx},${cy-h+b} ${cx},${cy+b} ${cx+a},${cy}" fill="${r}"/>`}
+function fish(x,y,c,cls,delay,sc){return `<g transform="translate(0 ${y}) scale(${sc||1})"><g class="${cls}" style="animation-delay:${-delay}s"><path d="M0 0 Q10 -7 22 0 Q10 7 0 0ZM22 0 L31 -6 L31 6Z" fill="${c}"/></g></g>`}
+
+/* ============ shore (scenes 1, 2, 9, 10) ============ */
+const MODES={
+ dirty:{sky:['#1b2233','#76575c','#eaa65e'],sun:'#ffd9a2',glow:'glowW',sea:['#8a7566','#3b5a62','#0a232b'],beach:['#b79a6f','#5e4c36'],sil:'#0b1013',plume:1,derelict:1,palms:1,smoke:1,sunY:505,sunR:62},
+ night:{sky:['#060c17','#13203a','#3a3a52'],sun:'#e6ecf2',glow:'glowC',sea:['#2a3a44','#102a35','#061820'],beach:['#4a4338','#1c1a16'],sil:'#04080b',plume:1,derelict:1,palms:1,smoke:1,sunY:300,sunR:34},
+ blue:{sky:['#0f2a44','#2b5a7a','#d9a98c'],sun:'#ffe2bd',glow:'glowW',sea:['#6f93a0','#255d70','#0a2f3d'],beach:['#8d8068','#3f3b33'],sil:'#071a22',turb:1,boats:1,palms:0,smoke:1,sunY:515,sunR:48},
+ clean:{sky:['#5aa7bd','#bfe4df','#ffe0b0'],sun:'#fff3d1',glow:'glowC',sea:['#a6dad2','#2f98a2','#0d5565'],beach:['#e6cfa0','#b99b6a'],sil:'#12353a',turb:1,boats:1,palms:1,smoke:0,sunY:505,sunR:56}
+};
+function shore(mode){const m=MODES[mode],id='sh'+mode;seed=11;let s=open();
+ s+=`<defs>${lg(id+'k',m.sky)}${lg(id+'s',m.sea)}${lg(id+'b',m.beach)}</defs>`;
+ s+=`<g data-d style="--dd:2"><rect x="-80" y="-60" width="1760" height="620" fill="url(#${id}k)"/></g>`;
+ s+=`<g data-d style="--dd:4"><circle cx="1000" cy="${m.sunY}" r="300" fill="url(#${m.glow})"/><circle cx="1000" cy="${m.sunY}" r="${m.sunR}" fill="${m.sun}"/></g>`;
+ s+=`<g data-d style="--dd:6" opacity="${mode==='night'?.25:.45}"><g class="cloud"><ellipse cx="880" cy="170" rx="300" ry="34" fill="url(#cl)"/></g><g class="cloud" style="animation-duration:120s"><ellipse cx="1250" cy="300" rx="340" ry="30" fill="url(#cl)"/><ellipse cx="260" cy="330" rx="260" ry="26" fill="url(#cl)"/></g></g>`;
+ if(m.turb)s+=`<g data-d style="--dd:7">${(mode==='blue'?[[720,50],[1480,70],[1565,56]]:[[760,64],[870,52],[1130,70],[1215,56]]).map((t,i)=>turbine(t[0],522,t[1],m.sil,10+i)).join('')}</g>`;
+ s+=`<g data-d style="--dd:10"><rect x="-80" y="520" width="1760" height="420" fill="url(#${id}s)"/>`;
+ let gl='';for(let i=0;i<20;i++){const y=532+i*i*.55,w=70+i*22;gl+=`<rect class="glint" x="${f(1000-w/2+R(-12,12))}" y="${f(y)}" width="${f(w)}" height="${f(1.5+i*.12)}" rx="1" fill="${m.sun}" opacity=".7" style="animation-delay:${-f(R(0,3))}s"/>`}
+ s+=gl+waves(535,780,15,'#ffffff',mode==='night'?.16:.3)+`</g>`;
+ s+=`<g data-d style="--dd:12"><path d="M1170 526 C1230 514 1400 507 1680 505 L1680 584 L1380 584 C1280 582 1215 566 1170 526Z" fill="${m.sil}"/>${plant(1420,508,1.05,m.sil,m.smoke)}<path d="M1300 552 L1244 562 L1208 576 L1198 626" stroke="${m.sil}" stroke-width="8" fill="none" stroke-linejoin="round"/></g>`;
+ if(m.plume){let b='';for(let i=0;i<40;i++){b+=`<circle class="blob" cx="1198" cy="630" r="${f(R(44,90))}" fill="url(#plume)" style="--tx:${f(-R(120,1000))}px;--ty:${f(R(-20,140))}px;--sc:${f(R(1.4,2.3))};animation-duration:${f(R(9,14))}s;animation-delay:${-f(R(0,14))}s"/>`}
+  s+=`<g data-d style="--dd:13"><ellipse cx="740" cy="670" rx="700" ry="104" fill="url(#plume)" opacity="${mode==='night'?.6:.8}"/><ellipse cx="520" cy="700" rx="460" ry="70" fill="url(#plume)" opacity=".5"/>${b}</g>`}
+ s+=`<g data-d style="--dd:20"><path d="M-80 768 C240 738 520 800 860 790 S1400 768 1680 802 L1680 960 L-80 960Z" fill="url(#${id}b)"/>`;
+ if(m.plume)s+=`<path d="M-80 768 C240 738 520 800 860 790 S1400 768 1680 802 L1680 812 C1400 782 1180 804 860 802 S240 750 -80 780Z" fill="#d8d3b0" opacity=".3"/>`;
+ s+=`<path class="foam" d="M-80 770 C240 740 520 802 860 792 S1400 770 1680 804" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>`;
+ if(m.derelict)s+=`<g transform="translate(660 842) rotate(-9)" fill="${m.sil}"><path d="M-84 0 L84 0 L58 30 L-70 30Z"/><rect x="-6" y="-60" width="5" height="60"/></g><g transform="translate(1110 826) rotate(7) scale(.8)" fill="${m.sil}"><path d="M-84 0 L84 0 L58 30 L-70 30Z"/></g>`;
+ s+=`</g>`;
+ if(m.boats)s+=`<g data-d style="--dd:14"><g class="bob" style="animation-delay:-1s" fill="${m.sil}"><path d="M520 650 h70 l-12 14 h-48z"/><path d="M552 612 v38 l26 0z"/></g><g class="bob" fill="${m.sil}" transform="translate(300 -20) scale(.6)"><path d="M520 650 h70 l-12 14 h-48z"/><path d="M552 612 v38 l26 0z"/></g></g>`;
+ if(m.palms)s+=`<g data-d style="--dd:30">${palm(1530,862,.9,-.1,m.sil,-1)}${palm(1420,876,.65,.16,m.sil,-2)}</g>`;
+ return s+`</svg>`}
+
+/* ============ scene 3: intercept ============ */
+const P3={M:[[430,560],[1060,560],[1130,620],[1130,716]],B:[[430,560],[700,560],[700,690],[790,690]]};
+function art3(){seed=33;let s=open('a3');
+ s+=`<defs>${lg('a3k',['#141c2b','#3b3a4f','#c4825a'])}${lg('a3w',['#7a7a62','#2f4a4f','#0a232b'])}${lg('a3c',['#8fe3da','#2a8f9c','#0a4a5a'])}${lg('a3g',['#3b3530','#1a1714'])}</defs>`;
+ s+=`<rect x="-80" y="-60" width="1760" height="800" fill="url(#a3k)"/><circle cx="1180" cy="690" r="260" fill="url(#glowW)" opacity=".7"/>`;
+ s+=`<rect x="1020" y="720" width="700" height="200" fill="url(#a3w)"/><rect class="clean-water" x="1020" y="720" width="700" height="200" fill="url(#a3c)"/>${waves(728,880,8,'#fff',.3).replace(/<path/g,'<path clip-path="url(#a3clip)"')}`;
+ s+=`<clipPath id="a3clip"><rect x="1060" y="720" width="640" height="200"/></clipPath>`;
+ s+=`<g class="sea-plume"><ellipse cx="1320" cy="730" rx="300" ry="26" fill="url(#plume)" opacity=".7"/>`;
+ for(let i=0;i<22;i++)s+=`<circle class="blob" cx="1132" cy="730" r="${f(R(24,46))}" fill="url(#plume)" style="--tx:${f(R(40,460))}px;--ty:${f(R(0,70))}px;--sc:${f(R(1.2,1.9))};animation-duration:${f(R(7,11))}s;animation-delay:${-f(R(0,10))}s"/>`;
+ s+=`</g>`;
+ s+=`<path d="M-80 720 L1070 720 L1100 760 L1124 920 L-80 920Z" fill="url(#a3g)"/>`;
+ s+=plant(250,720,1.2,'#0e1317',1);
+ [520,640,900,1010].forEach(x=>s+=`<rect x="${x-3}" y="566" width="6" height="154" fill="#1d252b"/>`);
+ s+=`<rect x="1124" y="620" width="12" height="100" fill="#1d252b"/>`;
+ const pth=a=>'M'+a.map(p=>p.join(' ')).join(' L');
+ s+=`<path d="${pth(P3.M)}" stroke="#2a343a" stroke-width="16" fill="none" stroke-linejoin="round"/><path d="${pth(P3.B)}" stroke="#2a343a" stroke-width="16" fill="none" stroke-linejoin="round"/>`;
+ s+=`<g id="p3g"></g>`;
+ s+=`<g class="gate"><rect x="792" y="494" width="16" height="74" rx="2" fill="#d4dde0"/><circle class="lamp" cx="800" cy="486" r="7"/></g>`;
+ s+=`<g><rect x="790" y="600" width="210" height="120" fill="#16222a"/><rect x="780" y="590" width="230" height="14" fill="#223038"/><g fill="#4fd6c4" opacity=".7"><rect x="812" y="624" width="26" height="42"/><rect x="852" y="624" width="26" height="42"/><rect x="892" y="624" width="26" height="42"/><rect x="932" y="624" width="26" height="42"/></g></g>`;
+ s+=`<g><rect class="cake" x="1010" y="690" width="40" height="30" rx="3" fill="#b6aa7c"/><rect class="cake" x="1010" y="664" width="40" height="26" rx="3" fill="#a89c70"/><rect class="cake" x="1056" y="700" width="30" height="20" rx="3" fill="#b6aa7c"/></g>`;
+ s+=`<text class="tl" x="470" y="540">Plant outlet</text><text class="tl2" x="470" y="520">GCT · slurry</text><text class="tl" x="822" y="500">Gate</text><text class="tl" x="800" y="760" style="fill:#4fd6c4">Filter presses</text><text class="tl" x="1240" y="800" opacity=".8">The gulf</text>`;
+ return s+`</svg>`}
+
+/* ============ scene 4: lab backdrop ============ */
+function art4(){seed=44;let s=open();
+ s+=`<defs><radialGradient id="a4g" cx=".72" cy=".5" r=".75"><stop offset="0" stop-color="#14606a"/><stop offset=".55" stop-color="#0a2c37"/><stop offset="1" stop-color="#050f14"/></radialGradient></defs><rect x="-80" y="-60" width="1760" height="1020" fill="url(#a4g)"/>`;
+ let g='';for(let i=0;i<14;i++){const y=560+i*i*2.2;g+=`<line x1="-80" y1="${f(y)}" x2="1680" y2="${f(y)}" stroke="#4fd6c4" stroke-opacity="${f(.04+i*.012)}"/>`}
+ for(let i=-12;i<=12;i++)g+=`<line x1="${800+i*60}" y1="560" x2="${800+i*190}" y2="920" stroke="#4fd6c4" stroke-opacity=".07"/>`;
+ s+=`<g data-d style="--dd:8">${g}</g>`;
+ let d='';for(let i=0;i<26;i++)d+=`<circle class="dust" cx="${f(R(0,1600))}" cy="${f(R(500,900))}" r="${f(R(1,3))}" fill="#bff5ee" style="animation-delay:${-f(R(0,14))}s;animation-duration:${f(R(10,18))}s"/>`;
+ return s+`<g data-d style="--dd:16">${d}</g></svg>`}
+
+/* ============ scene 5: dive to the foundation ============ */
+function art5(){seed=55;let s=open('a5');
+ s+=`<defs>${lg('a5k',['#4b93ad','#cfe9ee'])}${lg('a5w',['#43a3ae','#12607a','#062f3f','#031a25'])}${lg('a5s',['#7a7458','#2d2f2c'])}</defs><g class="cam">`;
+ s+=`<rect x="-80" y="-80" width="1760" height="502" fill="url(#a5k)"/><circle cx="360" cy="140" r="200" fill="url(#glowC)" opacity=".7"/>`;
+ s+=`<g opacity=".5"><ellipse cx="240" cy="170" rx="200" ry="16" fill="#fff"/><ellipse cx="1300" cy="120" rx="170" ry="13" fill="#fff"/></g>`;
+ s+=turbine(1060,420,330,'#eef4f5',9);
+ s+=`<rect x="-80" y="420" width="1760" height="1100" fill="url(#a5w)"/>`;
+ [[200,260,120],[520,280,200],[1500,260,160]].forEach(r=>s+=`<polygon class="ray" points="${r[0]},420 ${r[0]+r[2]},420 ${r[0]+r[2]+160},1000 ${r[0]-60},1000" fill="url(#ray)" style="animation-delay:${-r[1]/40}s"/>`);
+ s+=waves(424,452,4,'#ffffff',.5);
+ s+=`<polygon points="1008,400 1112,400 1124,450 996,450" fill="url(#conc)"/><rect x="1025" y="420" width="70" height="620" fill="url(#conc)"/>`;
+ for(let y=470;y<1040;y+=60)s+=`<rect x="1025" y="${y}" width="70" height="2" fill="#4a5659" opacity=".5"/>`;
+ s+=`<polygon points="1025,1040 1095,1040 1320,1110 800,1110" fill="url(#conc)"/><path d="M800 1110 H1320" stroke="#5c686b" stroke-width="3"/>`;
+ s+=`<rect x="800" y="1110" width="520" height="120" rx="8" fill="#17323a" stroke="#8d9a9c" stroke-width="14"/><rect x="814" y="1122" width="492" height="96" rx="4" fill="none" stroke="#4fd6c4" stroke-width="3"/>`;
+ for(let r=0;r<3;r++)for(let c=0;c<8;c++)s+=`<rect x="${826+c*59}" y="${1130+r*30}" width="53" height="26" rx="3" fill="#b6aa7c" stroke="#2a5560"/><circle class="pulse" cx="${852.5+c*59}" cy="${1143+r*30}" r="3" fill="#4fd6c4" style="animation-delay:${-f((r*8+c)*.17)}s"/>`;
+ [[790,1230],[1330,1230]].forEach(p=>s+=`<circle cx="${p[0]}" cy="${p[1]-6}" r="6" fill="#4fd6c4"/><circle class="ring" cx="${p[0]}" cy="${p[1]-6}" r="8" fill="none" stroke="#4fd6c4" stroke-width="2"/>`);
+ s+=`<path d="M-80 1226 Q300 1214 700 1228 T1680 1226 L1680 1520 L-80 1520Z" fill="url(#a5s)"/>`;
+ for(let i=0;i<46;i++){const x=R(-40,1640);if(x>760&&x<1620)continue;const h=R(30,86);s+=`<path class="grass" d="M${f(x)} 1232 q${f(R(-8,8))} ${f(-h/2)} ${f(R(-6,6))} ${f(-h)}" stroke="#3fbf9a" stroke-width="${f(R(3,5))}" fill="none" stroke-linecap="round" style="animation-delay:${-f(R(0,4))}s"/>`}
+ s+=fish(0,650,'#e6f6f3','fish',3,1)+fish(0,790,'#e6f6f3','fishr',11,1.2)+fish(0,980,'#d4efe9','fish',17,.9)+fish(0,1150,'#e6f6f3','fishr',22,1.1)+fish(0,560,'#d4efe9','fishr',5,.8);
+ s+=`<g stroke="#4fd6c4" stroke-width="1.6" fill="none"><path d="M1313 1140 L1345 1056"/><path d="M1302 1165 L1345 1118"/><path d="M1280 1195 L1345 1180"/></g>`;
+ s+=`<text class="tl" x="1352" y="1060">Marine concrete shell</text><text class="tl" x="1352" y="1122">HDPE liner</text><text class="tl" x="1352" y="1184">Core: phosphogypsum</text><text class="tl" x="1352" y="1208">+ binder</text>`;
+ return s+`</g></svg>`}
+
+/* ============ scene 6: the horizon ============ */
+function art6(){seed=66;const S=360,B=636,XL=80+125*(B-S)/(B-(S-52)),XR=460-130*(B-S)/(B-(S-52));let s=open();
+ s+=`<defs>${lg('a6k',['#3f86a8','#d7ecec'])}${lg('a6w',['#46a4ae','#12607a','#06293a'])}${lg('a6s',['#6f6b52','#2d2f2c'])}${lg('a6r',['#9aa3a4','#5d686b'])}<clipPath id="a6c"><polygon points="80,${B} ${XL},${S} ${XR},${S} 460,${B}"/></clipPath></defs>`;
+ s+=`<rect x="-80" y="-60" width="1760" height="${S+60}" fill="url(#a6k)"/><circle cx="1000" cy="${S-10}" r="260" fill="url(#glowC)" opacity=".8"/>`;
+ s+=`<g opacity=".95">${turbine(1160,S,70,'#eef4f5',11)}${turbine(1260,S,60,'#eef4f5',13)}${turbine(1480,S,66,'#eef4f5',12)}${turbine(1390,S,52,'#eef4f5',14)}</g>`;
+ s+=`<rect x="-80" y="${S}" width="1760" height="700" fill="url(#a6w)"/>`;
+ s+=`<polygon class="ray" points="620,${S} 780,${S} 900,${B} 560,${B}" fill="url(#ray)"/><polygon class="ray" points="1180,${S} 1300,${S} 1440,${B} 1100,${B}" fill="url(#ray)" style="animation-delay:-3s"/>`;
+ s+=waves(S+2,S+22,3,'#fff',.5);
+ /* breakwater */
+ s+=`<g class="a" style="--d:.5"><polygon points="80,${B} 205,${S-52} 330,${S-52} 460,${B}" fill="url(#a6r)"/><polygon points="80,${B} ${XL},${S} ${XR},${S} 460,${B}" fill="#0d5d78" opacity=".4"/>`;
+ let bl='';for(let r=0;r<9;r++)for(let c=-1;c<8;c++){bl+=`<rect x="${70+c*62+(r%2)*31}" y="${S+r*30}" width="58" height="26" rx="3" fill="#b6aa7c" stroke="#244c58" stroke-opacity=".8"/>`}
+ s+=`<g clip-path="url(#a6c)">${bl}</g>`;
+ for(let i=0;i<7;i++)s+=`<rect x="${f(206+i*17)}" y="${f(S-50+(i%3)*6)}" width="22" height="18" rx="4" fill="#8d979a" transform="rotate(${f(R(-12,12))} ${206+i*17} ${S-40})"/>`;
+ for(let i=0;i<5;i++)s+=`<circle class="spray" cx="${150+i*10}" cy="${S-6}" r="4" fill="#fff" style="--sx:${-20-i*8}px;animation-delay:${-i*.5}s"/>`;
+ s+=`</g>`;
+ /* floating solar + anchors */
+ s+=`<g class="a" style="--d:1.3">`;
+ for(let k=0;k<4;k++){const x=708+k*54;s+=`<rect x="${x-2}" y="${S-2}" width="52" height="6" rx="2" fill="#e8eef0"/><polygon points="${x},${S-3} ${x+46},${S-3} ${x+54},${S-18} ${x+8},${S-18}" fill="#1c3f66" stroke="#7fb1d8" stroke-width="1"/>`}
+ s+=`<path d="M722 ${S+4} Q705 ${S+130} 720 ${B-44}" stroke="#bcd" stroke-width="2" fill="none" stroke-dasharray="6 6"/><path d="M898 ${S+4} Q915 ${S+130} 882 ${B-44}" stroke="#bcd" stroke-width="2" fill="none" stroke-dasharray="6 6"/>`;
+ [[690,B-44],[850,B-44]].forEach(p=>s+=`<rect x="${p[0]}" y="${p[1]}" width="70" height="44" rx="4" fill="url(#conc)" stroke="#244c58"/><circle class="pulse" cx="${p[0]+35}" cy="${p[1]+22}" r="4" fill="#4fd6c4"/>`);
+ s+=`</g>`;
+ /* tidal */
+ s+=`<g class="a" style="--d:2.1"><rect x="1253" y="${B-48}" width="160" height="48" rx="4" fill="url(#conc)" stroke="#244c58"/>`;
+ for(let c=0;c<5;c++)s+=`<rect x="${1260+c*30}" y="${B-40}" width="26" height="32" rx="2" fill="#b6aa7c" stroke="#244c58"/>`;
+ s+=`<rect x="1325" y="${B-190}" width="16" height="144" fill="url(#conc)"/><circle cx="1333" cy="${B-196}" r="16" fill="#9aa6a8"/><g transform="translate(1333 ${B-196})"><g class="rotor" style="animation-duration:5s">${[0,120,240].map(a=>`<path d="M0 0 L-6 -18 L0 -84 L5 -18Z" fill="#dfe9ea" transform="rotate(${a})"/>`).join('')}</g></g></g>`;
+ s+=`<path d="M-80 ${B} Q400 ${B-14} 800 ${B} T1680 ${B} L1680 940 L-80 940Z" fill="url(#a6s)" opacity=".9"/>`;
+ s+=fish(0,520,'#e6f6f3','fish',4,1)+fish(0,590,'#d4efe9','fishr',9,.9)+fish(0,470,'#e6f6f3','fish',14,.8);
+ return s+`</svg>`}
+
+/* ============ scene 7: business model ============ */
+function art7(){let s=open('a7');
+ s+=`<defs><radialGradient id="a7g" cx=".5" cy=".62" r=".7"><stop offset="0" stop-color="#14606a"/><stop offset=".6" stop-color="#0a2630"/><stop offset="1" stop-color="#050f14"/></radialGradient></defs><rect x="-80" y="-60" width="1760" height="1020" fill="url(#a7g)"/>`;
+ let g='';for(let i=0;i<20;i++)g+=`<line x1="${i*90}" y1="0" x2="${i*90}" y2="900" stroke="#4fd6c4" stroke-opacity=".04"/>`;
+ s+=g;
+ s+=`<g transform="translate(250 540)"><g fill="#6f7f84">${''}</g>${plant(0,60,.85,'#0e1317',0)}<text class="t7b" x="-110" y="120">State and GCT</text><text class="t7s" x="-110" y="146">Development funders</text><text class="t7s" x="-110" y="166">EU · EBRD · AfDB</text></g>`;
+ s+=`<g transform="translate(800 570)">${isoCube(0,0,92,'#b3bdbe','#7c898c','#97a3a6')}<circle class="pulse" cx="-32" cy="-34" r="4" fill="#4fd6c4"/><text class="t7b" x="-96" y="86">Our plant</text></g>`;
+ s+=`<g transform="translate(1330 600)">${turbine(0,40,170,'#dfe9ea',10)}<text class="t7b" x="-100" y="80">Developers and ports</text><text class="t7s" x="-100" y="106">Foundation makers · developers</text><text class="t7s" x="-100" y="126">Port and coastal authorities</text></g>`;
+ s+=`<path d="M390 470 Q595 300 705 470" stroke="#f2b24c" stroke-opacity=".35" stroke-width="2" stroke-dasharray="6 8" fill="none"/><path d="M1210 470 Q1005 300 895 470" stroke="#f2b24c" stroke-opacity=".35" stroke-width="2" stroke-dasharray="6 8" fill="none"/>`;
+ s+=`<line x1="410" y1="610" x2="690" y2="610" stroke="#d8c27a" stroke-opacity=".35" stroke-dasharray="4 8"/><line x1="910" y1="610" x2="1190" y2="610" stroke="#4fd6c4" stroke-opacity=".35" stroke-dasharray="4 8"/>`;
+ s+=`<text class="t7s" x="470" y="296">PAYS TO REMOVE A LIABILITY</text><text class="t7" x="470" y="324">Intake fee per tonne <tspan class="t7s" style="fill:#f2b24c">[€]</tspan></text>`;
+ s+=`<text class="t7s" x="1010" y="296">PAYS FOR CERTIFIED BALLAST</text><text class="t7" x="1010" y="324">Module price per tonne <tspan class="t7s" style="fill:#f2b24c">[€]</tspan></text>`;
+ s+=`<text class="t7s" x="480" y="650" style="fill:#d8c27a">waste in</text><text class="t7s" x="1000" y="650" style="fill:#4fd6c4">sealed modules out</text><g id="p7g"></g>`;
+ return s+`</svg>`}
+
+/* ============ scene 8: the road ============ */
+const ROAD='M-20 600 C220 640 330 520 560 540 S900 600 1100 470 S1420 380 1640 350';
+function art8(){seed=88;let s=open('a8');
+ s+=`<defs>${lg('a8k',['#27425e','#a2a9a0','#ffcf98'])}${lg('a8w',['#d6b890','#2f7f8e','#0a3a4a'])}</defs><rect x="-80" y="-60" width="1760" height="700" fill="url(#a8k)"/><circle cx="1480" cy="330" r="280" fill="url(#glowW)"/><circle cx="1480" cy="330" r="46" fill="#fff0c9"/>`;
+ s+=`<rect x="-80" y="330" width="1760" height="620" fill="url(#a8w)"/>${waves(340,640,12,'#fff',.28)}`;
+ s+=`<g opacity=".9">${turbine(1250,330,64,'#12353a',11)}${turbine(1340,330,54,'#12353a',13)}</g>`;
+ s+=`<path d="${ROAD}" stroke="#06141b" stroke-opacity=".35" stroke-width="16" fill="none" stroke-linecap="round" transform="translate(0 8)"/><path d="${ROAD}" stroke="#ffffff" stroke-opacity=".18" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="2 14"/>`;
+ s+=`<path id="roadline" d="${ROAD}" pathLength="1" stroke="#4fd6c4" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1"/>`;
+ for(let i=1;i<=5;i++)s+=`<g id="pin${i}"><g class="pin"><circle r="19" fill="#06141b" stroke="#4fd6c4" stroke-width="3"/><text text-anchor="middle" y="6" class="t7s" style="fill:#4fd6c4;font-size:17px">${i}</text></g></g>`;
+ s+=`<g id="roadboat"><path d="M-16 0 h32 l-6 8 h-20z" fill="#fff"/><path d="M-2 -22 v22 h14z" fill="#fff"/></g>`;
+ return s+`</svg>`}
+
+/* ============ scene registry ============ */
+const ART={s1:()=>shore('dirty'),s2:()=>shore('night'),s3:art3,s4:art4,s5:art5,s6:art6,s7:art7,s8:art8,s9:()=>shore('blue'),s10:()=>shore('clean')};
+const scenes=[...document.querySelectorAll('.scene')];
+scenes.forEach(sc=>{sc.querySelector('.art').innerHTML=ART[sc.id]()});
+
+/* ============ scene hooks ============ */
+const hooks={};let cur=-1;
+const poly=pts=>{const seg=[];let L=0;for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(l);L+=l}return{pts,seg,L}};
+const at=(p,s)=>{let i=0;while(i<p.seg.length-1&&s>p.seg[i]){s-=p.seg[i];i++}const a=p.pts[i],b=p.pts[i+1],k=Math.max(0,Math.min(1,s/p.seg[i]));return[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k]};
+const NS='http://www.w3.org/2000/svg';const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+
+hooks[0]={enter(){this.t0=performance.now()},tick(){const t=(performance.now()-this.t0)/1000;$('#tick').textContent=(t*0.162).toFixed(1)}};
+
+(function(){const M=poly(P3.M),B=poly(P3.B),svg=$('#s3 svg'),g=$('#p3g'),ps=[];
+ for(let i=0;i<34;i++){const c=mk('circle',{r:5,fill:'#d8c27a'});g.appendChild(c);ps.push({c,s:i*(M.L/34),p:M})}
+ let last=0,t0=0,closed=false;
+ hooks[2]={enter(){t0=performance.now();closed=false;svg.classList.remove('closed');ps.forEach((q,i)=>{q.s=i*(M.L/34);q.p=M})},
+  tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!closed&&now-t0>2600){closed=true;svg.classList.add('closed')}
+   ps.forEach(q=>{const prev=q.s;q.s+=150*dt;if(prev<270&&q.s>=270)q.p=closed?B:M;if(q.s>=q.p.L){q.s=0;q.p=M}const[x,y]=at(q.p,q.s);q.c.setAttribute('cx',f(x));q.c.setAttribute('cy',f(y));q.c.setAttribute('fill',(q.p===B&&q.s>270)?'#b6aa7c':'#d8c27a')})}}})();
+
+(function(){const w=$('#wrap'),items=[...document.querySelectorAll('#steps li')],cap=$('#cap'),tm=[];
+ const caps=['Dewatered cake, tested for radium and metals','Binder locks contaminants into a solid','HDPE liner: a second wall','Marine concrete shell: a certified module'];
+ const set=n=>{w.dataset.stage=n;cap.textContent=caps[n];items.forEach((li,i)=>li.classList.toggle('on',i===Math.min(n,2)))};
+ hooks[3]={enter(){tm.forEach(clearTimeout);tm.length=0;w.dataset.peel='0';set(0);[1,2,3].forEach((n,i)=>tm.push(setTimeout(()=>set(n),1900+i*2100)))},leave(){tm.forEach(clearTimeout);tm.length=0}};
+ items.forEach(li=>{const go=()=>{tm.forEach(clearTimeout);tm.length=0;set(+li.dataset.st)};li.addEventListener('click',go);li.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go()}})});
+ $('#peel').addEventListener('click',()=>{w.dataset.peel=w.dataset.peel==='1'?'0':'1';if(w.dataset.stage!=='3'){tm.forEach(clearTimeout);set(3)}});
+})();
+
+(function(){const g=$('#p7g'),L=[[390,470],[595,300],[705,470]],Rr=[[1210,470],[1005,300],[895,470]],q=(p,t)=>{const u=1-t;return[u*u*p[0][0]+2*u*t*p[1][0]+t*t*p[2][0],u*u*p[0][1]+2*u*t*p[1][1]+t*t*p[2][1]]};
+ const coins=[];for(let i=0;i<14;i++){const side=i%2,c=mk('g',{});c.innerHTML='<circle r="11" fill="#f2b24c"/><circle r="7" fill="none" stroke="#06141b" stroke-opacity=".5" stroke-width="1.5"/>';g.appendChild(c);coins.push({c,side,t:(i>>1)/7})}
+ const wst=[],mod=[];for(let i=0;i<7;i++){const a=mk('rect',{width:14,height:14,rx:3,fill:'#d8c27a'});const b=mk('g',{});b.innerHTML=isoCube(0,0,9,'#b3bdbe','#7c898c','#97a3a6');g.appendChild(a);g.appendChild(b);wst.push({e:a,t:i/7});mod.push({e:b,t:i/7})}
+ let last=0;hooks[6]={tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  coins.forEach(k=>{k.t=(k.t+dt*.2)%1;const[x,y]=q(k.side?Rr:L,k.t);k.c.setAttribute('transform',`translate(${f(x)} ${f(y)})`);k.c.setAttribute('opacity',Math.sin(k.t*Math.PI).toFixed(2))});
+  wst.forEach(k=>{k.t=(k.t+dt*.16)%1;k.e.setAttribute('x',f(410+k.t*280));k.e.setAttribute('y',603);k.e.setAttribute('opacity',Math.sin(k.t*Math.PI).toFixed(2))});
+  mod.forEach(k=>{k.t=(k.t+dt*.16)%1;k.e.setAttribute('transform',`translate(${f(920+k.t*270)} 616)`);k.e.setAttribute('opacity',Math.sin(k.t*Math.PI).toFixed(2))})}}})();
+
+(function(){const path=$('#roadline'),len=path.getTotalLength(),boat=$('#roadboat'),cards=[...document.querySelectorAll('#roadcards .card')],xs=[160,480,800,1120,1440],pinf=[];
+ xs.forEach((x,i)=>{let lo=0,hi=len;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(path.getPointAtLength(m).x<x)lo=m;else hi=m}pinf.push(lo/len);const p=path.getPointAtLength(lo);$('#pin'+(i+1)).setAttribute('transform',`translate(${f(p.x)} ${f(p.y)})`)});
+ let t0=0;hooks[7]={enter(){t0=performance.now();cards.forEach(c=>c.classList.remove('on'));for(let i=1;i<=5;i++)$('#pin'+i).firstChild.classList.remove('on')},
+  tick(now){const k=Math.min(1,Math.max(0,(now-t0-900)/6200)),e=1-Math.pow(1-k,2.2);path.style.strokeDashoffset=1-e;const p=path.getPointAtLength(e*len);boat.setAttribute('transform',`translate(${f(p.x)} ${f(p.y-14)})`);boat.style.opacity=k>0?1:0;
+   pinf.forEach((pf,i)=>{if(e>=pf-.005){cards[i].classList.add('on');$('#pin'+(i+1)).firstChild.classList.add('on')}})}}})();
+
+/* ============ navigation ============ */
+const segs=$('#segs');scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='seg';b.type='button';b.title=s.dataset.name;b.setAttribute('aria-label',`Scene ${i+1}: ${s.dataset.name}`);b.innerHTML='<i></i>';b.addEventListener('click',()=>go(i));segs.appendChild(b)});
+const leaveT=new Map();
+function runCounts(sc){sc.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,t0=performance.now()+700;el.textContent='0';const step=n=>{const k=Math.min(1,Math.max(0,(n-t0)/1500)),e=1-Math.pow(1-k,3);el.textContent=Math.round(to*e);if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)})}
+function go(n){n=Math.max(0,Math.min(scenes.length-1,n));if(n===cur)return;const prev=cur;cur=n;
+ scenes.forEach((s,i)=>{s.classList.toggle('active',i===n);s.classList.toggle('past',i<n);s.classList.toggle('future',i>n)});
+ if(prev>=0){const ps=scenes[prev];ps.classList.add('leaving');clearTimeout(leaveT.get(ps));leaveT.set(ps,setTimeout(()=>ps.classList.remove('leaving'),1300));hooks[prev]?.leave?.()}
+ scenes[n].classList.remove('leaving');runCounts(scenes[n]);hooks[n]?.enter?.();
+ [...segs.children].forEach((b,i)=>{b.classList.toggle('on',i===n);b.classList.toggle('done',i<n)});
+ $('#now').textContent=`${n+1} / ${scenes.length} · ${scenes[n].dataset.name}`;
+ try{history.replaceState(null,'','#s'+(n+1))}catch(e){}
+ $('#hint').style.opacity=0}
+$('#prev').addEventListener('click',()=>go(cur-1));$('#next').addEventListener('click',()=>go(cur+1));
+addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('.steps li')&&(e.key===' '||e.key==='Enter'))return;
+ if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}
+ else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1)}
+ else if(e.key==='Home')go(0);else if(e.key==='End')go(scenes.length-1);
+ else if(e.key==='f'||e.key==='F')tfs()});
+function tfs(){try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}}
+$('#fs').addEventListener('click',tfs);
+let sx=0,sy=0;addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY});
+addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)>60&&Math.abs(dy)<80&&e.pointerType!=='mouse')go(cur+(dx<0?1:-1))});
+let tx=0,ty=0,px=0,py=0;addEventListener('pointermove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5});
+function loop(now){px+=(tx-px)*.05;py+=(ty-py)*.05;const sc=scenes[cur];if(sc){sc.style.setProperty('--px',px.toFixed(3));sc.style.setProperty('--py',py.toFixed(3));hooks[cur]?.tick?.(now)}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+const h=parseInt((location.hash||'').replace('#s',''),10);go(h>=1&&h<=scenes.length?h-1:0);
+setTimeout(()=>{if(cur===0)$('#hint').style.opacity=.9},2500);setTimeout(()=>{$('#hint').style.opacity=0},9000);
+</script>
+
+</body></html>

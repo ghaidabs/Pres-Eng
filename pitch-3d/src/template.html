@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gabès Phosphogypsum Ballast</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+/* Layout: a live 3D world fills the screen; each stop's copy floats over it on a soft scrim. */
+:root{
+  --ink:#06141b; --text:#e9f3f0; --muted:#a3bcb9;
+  --warn:#f2b24c; --clean:#4fd6c4; --alarm:#e5694b;
+  --glass:rgba(6,20,27,.62); --line:rgba(255,255,255,.14);
+  --f-display:'Bricolage Grotesque','Segoe UI Variable Display','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Consolas,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+#gl{position:fixed;inset:0}
+#gl canvas{display:block;width:100%;height:100%}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 55% 50%,transparent 55%,rgba(0,0,0,.42) 100%)}
+.curtain{position:fixed;inset:0;z-index:30;background:var(--ink);display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;color:var(--muted);transition:opacity 1.2s}
+body.ready .curtain{opacity:0;pointer-events:none}
+
+/* ---------- scenes (copy only; the world is behind) ---------- */
+.scene{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .6s,visibility 0s .6s}
+.scene.active{opacity:1;visibility:visible;transition:opacity .8s}
+.scene::before{content:"";position:absolute;inset:0;pointer-events:none}
+.sc-left::before{background:linear-gradient(90deg,rgba(4,12,16,.74),rgba(4,12,16,.42) 34%,rgba(4,12,16,0) 58%)}
+.sc-top::before{background:linear-gradient(180deg,rgba(4,12,16,.72),rgba(4,12,16,.18) 30%,rgba(4,12,16,0) 48%,rgba(4,12,16,.6) 100%)}
+.sc-full::before{background:rgba(4,12,16,.66);backdrop-filter:blur(2px)}
+.copy{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,1.6vh,18px);
+  padding:clamp(64px,9vh,100px) max(clamp(20px,5vw,96px),env(safe-area-inset-right,0px)) clamp(84px,12vh,116px) max(clamp(20px,5vw,96px),env(safe-area-inset-left,0px));
+  overflow-y:auto;scrollbar-width:none}
+.copy::-webkit-scrollbar{display:none}
+.copy>*{pointer-events:auto;flex:none}
+.copy-left>*:not(.wide){max-width:clamp(300px,40vw,620px)}
+.copy-top{justify-content:flex-start}
+.eyebrow{margin:0;font-family:var(--f-mono);font-size:clamp(11px,.9vw,13px);letter-spacing:.16em;text-transform:uppercase;color:var(--clean)}
+.eyebrow.warn{color:var(--warn)}
+h1,h2{margin:0;font-family:var(--f-display);font-weight:700;letter-spacing:-.025em;line-height:1.02;text-wrap:balance;text-shadow:0 2px 28px rgba(0,0,0,.45)}
+h1{font-size:clamp(32px,4.6vw,76px)} h2{font-size:clamp(28px,3.6vw,58px)}
+.hl{color:var(--warn)} .hl-c{color:var(--clean)}
+.lede{margin:0;font-size:clamp(15px,1.3vw,20px);line-height:1.5;color:#dbe9e6;text-shadow:0 1px 14px rgba(0,0,0,.6)}
+.small{font-size:clamp(12px,.95vw,14px);color:var(--muted)}
+.stats{display:flex;flex-wrap:wrap;gap:clamp(14px,2.2vw,36px);margin:0}
+.stats.wide{max-width:min(780px,100%)}
+.stats dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stats dd{margin:2px 0 0;font-family:var(--f-display);font-weight:650;font-size:clamp(20px,2.1vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 1px 14px rgba(0,0,0,.5)}
+.stats dd.bad{color:var(--alarm)}
+.ticker{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.ticker b{color:var(--warn);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;min-width:4ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:rgba(6,20,27,.55);backdrop-filter:blur(6px);padding:5px 11px;border-radius:99px;font-size:clamp(12px,.95vw,14px)}
+.chip.c{border-color:rgba(79,214,196,.5);color:var(--clean)}
+.note{border-left:3px solid var(--warn);padding:8px 14px;background:rgba(6,20,27,.62);font-size:clamp(13px,1vw,15px);color:#e8e2cf;backdrop-filter:blur(6px)}
+.ph{border-bottom:1px dashed var(--warn);color:#ffe3ae;white-space:nowrap}
+.a{opacity:0}
+.scene.active .a{animation:rise .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0)*1s + .15s)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+body.shot .a{animation:none!important;opacity:1}
+body.shot .scene,body.shot .curtain{transition:none!important}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:clamp(10px,1.2vw,18px);margin-top:auto}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:6px;padding:clamp(12px,1.3vw,20px);min-width:0}
+.card h3{margin:0 0 4px;font-family:var(--f-display);font-size:clamp(15px,1.25vw,19px);font-weight:650;letter-spacing:-.01em}
+.card p{margin:0;font-size:clamp(12px,.95vw,14.5px);color:#c9dbd8;line-height:1.4}
+.card .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.big{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3vw,46px);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;margin:6px 0;color:var(--warn)}
+.big small{font-size:.42em;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
+.tag{display:inline-block;margin-top:8px;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;padding:2px 8px;border-radius:3px;background:rgba(242,178,76,.16);color:var(--warn)}
+.bar{display:flex;gap:3px;height:32px;margin-top:10px;clip-path:inset(0 100% 0 0)}
+.scene.active .bar{animation:wipe 1.5s cubic-bezier(.3,.7,.2,1) 1s both}
+body.shot .bar{animation:none;clip-path:none}
+@keyframes wipe{to{clip-path:inset(0 0 0 0)}}
+.bar span{flex:var(--w) 1 0;min-width:0;display:flex;align-items:center;padding:0 10px;font-size:12px;font-family:var(--f-mono);white-space:nowrap;overflow:hidden;color:#06141b;font-weight:500}
+.total{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.total b{font-family:var(--f-display);font-size:clamp(24px,2.8vw,42px);color:var(--warn);letter-spacing:-.03em}
+
+/* ---------- module steps ---------- */
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:10px 14px 10px 10px;border:1px solid var(--line);border-radius:6px;background:rgba(6,20,27,.55);backdrop-filter:blur(6px);cursor:pointer;transition:border-color .4s,background .4s}
+.steps li .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;border:1px solid var(--line);color:var(--muted);transition:all .4s}
+.steps li b{display:block;font-family:var(--f-display);font-size:clamp(15px,1.25vw,19px);font-weight:650}
+.steps li span.d{font-size:clamp(12px,.95vw,14px);color:#c1d5d2}
+.steps li.on{border-color:rgba(79,214,196,.7);background:rgba(10,50,56,.72)}
+.steps li.on .n{background:var(--clean);color:#06141b;border-color:var(--clean)}
+.btn{pointer-events:auto;border:1px solid rgba(79,214,196,.6);background:rgba(10,50,56,.65);color:var(--clean);padding:8px 16px;border-radius:99px;font-size:13px;font-family:var(--f-mono);letter-spacing:.04em;backdrop-filter:blur(6px)}
+.btn:hover,.btn.on{background:rgba(79,214,196,.2)}
+.modctl{position:absolute;z-index:4;right:max(6vw,env(safe-area-inset-right,0px));top:clamp(70px,11vh,110px);display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:auto}
+.cap{font-family:var(--f-mono);font-size:clamp(11px,.95vw,14px);letter-spacing:.05em;color:var(--clean);text-shadow:0 1px 10px rgba(0,0,0,.7)}
+
+/* ---------- 3D-anchored labels ---------- */
+.lbl{position:fixed;left:0;top:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .5s;font-family:var(--f-mono);font-size:clamp(11px,.85vw,13px);letter-spacing:.04em;color:var(--text);white-space:nowrap}
+.lbl.on{opacity:1}
+.lbl>span{position:absolute;left:10px;top:-11px;padding:3px 8px;border-radius:3px;background:rgba(4,12,16,.72);border-left:2px solid var(--clean);backdrop-filter:blur(4px)}
+.lbl.w>span{border-color:var(--warn)} .lbl.r>span{border-color:var(--alarm)}
+.lbl.l>span{left:auto;right:10px}
+.lbl::before{content:"";position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--clean);box-shadow:0 0 0 4px rgba(79,214,196,.25)}
+.lbl.w::before{background:var(--warn);box-shadow:0 0 0 4px rgba(242,178,76,.25)} .lbl.r::before{background:var(--alarm);box-shadow:0 0 0 4px rgba(229,105,75,.25)}
+.lbl.num>span{left:-13px;top:-40px;width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%;border:2px solid var(--clean);font-size:13px}
+.lbl.num::before{display:none}
+
+/* ---------- business flow ---------- */
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:clamp(8px,1.2vw,18px);margin-top:auto;max-width:1180px}
+.node{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:clamp(12px,1.3vw,20px);min-width:0}
+.node.us{border-color:rgba(79,214,196,.6);background:rgba(8,40,46,.72)}
+.node b{display:block;font-family:var(--f-display);font-size:clamp(16px,1.4vw,21px);font-weight:650}
+.node span{display:block;font-size:clamp(12px,.95vw,14px);color:var(--muted)}
+.arrow{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:clamp(110px,13vw,190px)}
+.arrow svg{width:100%;height:34px;overflow:visible}
+.arrow .lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center}
+.arrow .pay{font-family:var(--f-display);font-size:clamp(14px,1.15vw,17px);color:var(--warn);text-align:center}
+.dash{stroke-dasharray:6 7;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-26}}
+
+/* ---------- road ---------- */
+.road .card{opacity:.3;transform:translateY(10px);transition:opacity .7s,transform .7s,border-color .7s}
+.road .card.on{opacity:1;transform:none;border-color:rgba(79,214,196,.6)}
+
+/* ---------- trust / team ---------- */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(18px,3vw,56px);align-items:start}
+.trust{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.trust li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.trust svg{width:30px;height:30px}
+.trust b{font-family:var(--f-display);font-size:clamp(15px,1.3vw,20px);font-weight:650;display:block}
+.trust span{font-size:clamp(12px,.98vw,14.5px);color:#c9dbd8}
+.team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,1vw,14px)}
+.person{background:var(--glass);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0;backdrop-filter:blur(8px)}
+.avatar{width:44px;height:44px;border-radius:50%;border:1px dashed rgba(242,178,76,.7);display:grid;place-items:center;font-family:var(--f-mono);color:var(--warn);margin-bottom:8px}
+.person b{display:block;font-size:clamp(13px,1.05vw,15px);font-weight:600}
+.person span{font-size:clamp(11px,.9vw,13px);color:var(--muted);display:block;line-height:1.3}
+.person .when{margin-top:6px;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--clean)}
+.funds{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.funds li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 0;font-size:clamp(13px,1.05vw,16px)}
+.funds li i{font-style:normal;font-family:var(--f-mono);color:var(--warn)}
+.miles{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.miles li{display:grid;grid-template-columns:78px 1fr;gap:10px;font-size:clamp(13px,1.05vw,16px)}
+.miles li i{font-style:normal;font-family:var(--f-mono);font-size:12px;color:var(--clean);padding-top:2px}
+
+/* ---------- chrome ---------- */
+.brand{position:fixed;z-index:20;top:max(14px,env(safe-area-inset-top,0px));left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px;pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.6)}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.02em}
+.brand span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.dock{position:fixed;z-index:20;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.4vw,18px);
+  padding:30px max(16px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:linear-gradient(0deg,rgba(4,12,16,.78),rgba(4,12,16,0))}
+.nb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(6,20,27,.65);backdrop-filter:blur(6px);display:grid;place-items:center;font-size:16px;line-height:1}
+.nb:hover{border-color:var(--clean);color:var(--clean)}
+.nb:focus-visible,.seg:focus-visible,.steps li:focus-visible,.btn:focus-visible{outline:2px solid var(--clean);outline-offset:3px}
+.segs{display:flex;gap:6px;min-width:0}
+.seg{width:clamp(14px,3vw,46px);height:22px;padding:0;border:0;background:none;position:relative}
+.seg i{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);transition:background .4s}
+.seg:hover i{background:rgba(255,255,255,.45)} .seg.on i{background:var(--clean)} .seg.done i{background:rgba(79,214,196,.5)}
+.now{position:absolute;left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));bottom:max(22px,env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+.fs{position:absolute;right:max(clamp(16px,2.2vw,32px),env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px))}
+.hint{position:fixed;z-index:20;left:50%;bottom:64px;transform:translateX(-50%);font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);transition:opacity 1s;pointer-events:none;white-space:nowrap;opacity:0}
+#nogl[hidden]{display:none}
+#nogl{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:var(--ink);padding:24px;text-align:center}
+
+@media (max-width:900px){
+  .copy{justify-content:flex-start;padding-top:70px}
+  .steps li .d{display:none}
+  .g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))} .g3,.two{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr} .arrow{min-width:0}
+  .team{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .copy-left>*:not(.wide){max-width:100%}
+  .now,.hint,.fs,.brand span{display:none}
+  .sc-left::before{background:linear-gradient(180deg,rgba(4,12,16,.8),rgba(4,12,16,.5) 60%,rgba(4,12,16,.2))}
+  .stats dd{font-size:20px}
+  .lbl{display:none}
+}
+@media (max-width:900px) and (max-height:760px){.card p,.person span{display:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="gl"></div>
+<div class="vig"></div><div class="grain"></div>
+<div class="curtain">BUILDING THE GULF OF GABÈS…</div>
+<div id="nogl" hidden><p>This pitch needs WebGL. Please open it in an up-to-date Chrome, Edge or Firefox.</p></div>
+
+<header class="brand"><b>Gabès Phosphogypsum Ballast</b><span>Investor pitch · <span class="ph">[Company name]</span></span></header>
+
+<!-- 1 THE SHORE -->
+<section class="scene sc-left" id="s1" data-name="The shore">
+  <div class="copy copy-left">
+    <p class="eyebrow warn a" style="--d:.1">Gulf of Gabès · Tunisia</p>
+    <h1 class="a" style="--d:.25">Every day, <span class="hl">14,000 tonnes</span> of waste reach this sea.</h1>
+    <p class="lede a" style="--d:.45">Phosphogypsum from the fertilizer plant has been discharged here for 50 years. No cleanup, reuse or closure plan has been carried out.</p>
+    <dl class="stats wide a" style="--d:.65">
+      <div><dt>Per day</dt><dd>12,500–15,000 t</dd></div>
+      <div><dt>Per year</dt><dd>≈ 4 million t</dd></div>
+      <div><dt>Accumulated</dt><dd>70–200+ Mt</dd></div>
+    </dl>
+    <p class="ticker a" style="--d:.85">Discharged since this scene opened <b id="tick">0.0</b> tonnes</p>
+  </div>
+</section>
+
+<!-- 2 THE PLUME -->
+<section class="scene sc-left" id="s2" data-name="The plume">
+  <div class="copy copy-left">
+    <p class="eyebrow warn a" style="--d:.1">Below the surface</p>
+    <h2 class="a" style="--d:.2">A milky plume the fish swim away from.</h2>
+    <p class="lede a" style="--d:.4">The slurry clouds the water and settles across the shelf. Fish die or move off, and the nets come up empty.</p>
+    <dl class="stats wide a" style="--d:.6">
+      <div><dt>Fisher income per day</dt><dd><span class="hl">700</span> → <span style="color:var(--alarm)">20 TND</span></dd></div>
+      <div><dt>Share of the yearly loss</dt><dd>47%</dd></div>
+    </dl>
+    <p class="small a" style="--d:.8">Fishing carries the largest share of the damage.</p>
+  </div>
+</section>
+
+<!-- 3 THE SEABED / WHO PAYS -->
+<section class="scene sc-top" id="s3" data-name="Who pays">
+  <div class="copy copy-top">
+    <p class="eyebrow warn a" style="--d:.1">The seabed · who pays</p>
+    <h2 class="a" style="--d:.2">The sea is not the only thing that pays.</h2>
+    <div class="grid g4 a" style="--d:.5">
+      <div class="card"><span class="k">Fishers</span><div class="big"><span data-count="47">47</span>%<small>of the loss</small></div><p>The largest share. Daily catch income fell from up to <b>700</b> to about <b>20 TND</b>.</p></div>
+      <div class="card"><span class="k">Tourism and hotels</span><div class="big"><span data-count="25">25</span> M<small>TND a year</small></div><p>Occupancy stays well below neighbouring regions. The beaches carry the visible plume.</p><span class="tag">33%</span></div>
+      <div class="card"><span class="k">Health system</span><div class="big"><span data-count="10">10</span> M<small>TND a year</small></div><p>A 2018 EU study found a correlation with bronchitis and asthma in three neighbourhoods.</p><span class="tag">13%</span></div>
+      <div class="card"><span class="k">Farmers</span><div class="big"><span data-count="5">5</span> M<small>TND a year</small></div><p>Lower productivity and abandoned plots.</p><span class="tag">7%</span></div>
+    </div>
+    <div class="a" style="--d:.8">
+      <div class="total"><b><span data-count="76">76</span> M TND a year</b><span class="small">2015 only, about 200 TND per inhabitant. Not every harm is counted, so treat it as a floor.</span></div>
+      <div class="bar"><span style="--w:47;background:#f2b24c">Fishing 47%</span><span style="--w:33;background:#e5694b">Tourism 33%</span><span style="--w:13;background:#d8c27a">Health 13%</span><span style="--w:7;background:#a8bdb8"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 INTERCEPT -->
+<section class="scene sc-left" id="s4" data-name="Intercept">
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.1">Our answer · Step 1</p>
+    <h2 class="a" style="--d:.2">Stop it before it reaches the sea.</h2>
+    <p class="lede a" style="--d:.4">We take fresh slurry at the plant outlet, before discharge. This is the step that actually reduces what enters the gulf.</p>
+    <div class="chips a" style="--d:.6"><span class="chip c">Agreement with GCT and the state needed</span></div>
+    <p class="note a" style="--d:.8">Scope: solid phosphogypsum only. The gas emissions behind the 2025 protests are a separate problem, and we do not claim to fix them.</p>
+  </div>
+</section>
+
+<!-- 5 THE MODULE -->
+<section class="scene sc-left" id="s5" data-name="The module">
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.1">Our answer · Step 2</p>
+    <h2 class="a" style="--d:.2">Turn loose waste into a sealed block.</h2>
+    <ol class="steps a" style="--d:.45" id="steps">
+      <li tabindex="0"><span class="n">1</span><div><b>Dewater and measure</b><span class="d">Filter presses make solid cake. Every batch is tested for radium and metals by gamma spectrometry.</span></div></li>
+      <li tabindex="0"><span class="n">2</span><div><b>Stabilize</b><span class="d">A binder locks contaminants into a solid and cuts leaching and radon release.</span></div></li>
+      <li tabindex="0"><span class="n">3</span><div><b>Encapsulate</b><span class="d">An HDPE liner, then a marine-grade concrete shell. Cured, tested and certified before it ships.</span></div></li>
+    </ol>
+    <p class="lede a" style="--d:.7">Three barriers: binder, liner, shell. No single failure causes a release.</p>
+  </div>
+  <div class="modctl a" style="--d:.9"><div class="cap" id="cap"></div><button class="btn" id="peel" type="button">See inside</button></div>
+</section>
+
+<!-- 6 THE TURBINE -->
+<section class="scene sc-left" id="s6" data-name="The turbine">
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.1">Product 1 · Wind foundation ballast</p>
+    <h2 class="a" style="--d:.25">It starts with a turbine.</h2>
+    <p class="lede a" style="--d:.45">Offshore gravity bases need cheap, heavy, permanent mass. Our module fills the foundation and never touches open water.</p>
+    <dl class="stats wide a" style="--d:.65">
+      <div><dt>Ballast, one large base</dt><dd>19–27 kt</dd></div>
+      <div><dt>Plant discharge absorbed</dt><dd>≈ 2 days</dd></div>
+    </dl>
+    <div class="chips a" style="--d:.85"><span class="chip c">Gravity base</span><span class="chip c">Fully removable</span><span class="chip">Shallow shelf (to verify)</span></div>
+    <p class="small a" style="--d:1">Our entry product and our proof, not the whole answer.</p>
+  </div>
+</section>
+
+<!-- 7 THE HORIZON -->
+<section class="scene sc-top" id="s7" data-name="The horizon">
+  <div class="copy copy-top">
+    <p class="eyebrow a" style="--d:.1">Then the horizon opens</p>
+    <h2 class="a" style="--d:.2">Same module, more places to put it.</h2>
+    <div class="grid g3">
+      <div class="card a" style="--d:.7"><span class="k">Product 2</span><h3>Breakwater and reef-base blocks</h3><p>Coastal defence, underwater. First buyer: coastal and port authorities.</p></div>
+      <div class="card a" style="--d:1.2"><span class="k">Product 3</span><h3>Anchor and sinker blocks</h3><p>Seabed anchors for floating solar, buoys, platforms. First buyer: floating solar and marine energy developers.</p></div>
+      <div class="card a" style="--d:1.7"><span class="k">Product 4</span><h3>Tidal and wave device foundations</h3><p>Same logic as wind gravity bases. First buyer: marine energy startups.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 BUSINESS MODEL -->
+<section class="scene sc-top" id="s8" data-name="Business model">
+  <div class="copy copy-top">
+    <p class="eyebrow a" style="--d:.1">Business model</p>
+    <h2 class="a" style="--d:.2">One tonne, two payers.</h2>
+    <p class="lede a" style="--d:.4">We are paid to take the waste away, and paid again for the certified module we make from it.</p>
+    <div class="flow a" style="--d:.7">
+      <div class="node"><b>State and GCT</b><span>Development funders · EU · EBRD · AfDB</span></div>
+      <div class="arrow"><span class="lab">Pays to remove a liability</span>
+        <svg viewBox="0 0 160 34" preserveAspectRatio="none"><path class="dash" d="M4 12 H150" stroke="#d8c27a" stroke-width="2.4" fill="none"/><path d="M146 6 L156 12 L146 18" stroke="#d8c27a" stroke-width="2.4" fill="none"/><path class="dash" d="M156 26 H10" stroke="#f2b24c" stroke-width="2.4" fill="none" style="animation-direction:reverse"/></svg>
+        <span class="pay">Intake fee / t <span class="ph">[€]</span></span></div>
+      <div class="node us"><b>Our plant</b><span>Waste in · sealed modules out</span></div>
+      <div class="arrow"><span class="lab">Pays for certified ballast</span>
+        <svg viewBox="0 0 160 34" preserveAspectRatio="none"><path class="dash" d="M4 12 H150" stroke="#4fd6c4" stroke-width="2.4" fill="none"/><path d="M146 6 L156 12 L146 18" stroke="#4fd6c4" stroke-width="2.4" fill="none"/><path class="dash" d="M156 26 H10" stroke="#f2b24c" stroke-width="2.4" fill="none"/></svg>
+        <span class="pay">Module price / t <span class="ph">[€]</span></span></div>
+      <div class="node"><b>Developers and ports</b><span>Foundation makers · developers · port and coastal authorities</span></div>
+    </div>
+    <div class="chips a" style="--d:1"><span class="chip">Also: monitoring-as-a-service contracts</span><span class="chip">Grants for pilots and R&amp;D</span><span class="chip">Prices to be set from real quotes: <span class="ph">[€ / tonne]</span></span></div>
+  </div>
+</section>
+
+<!-- 9 THE ROAD -->
+<section class="scene sc-top road" id="s9" data-name="The road">
+  <div class="copy copy-top">
+    <p class="eyebrow a" style="--d:.1">The road to the first turbine</p>
+    <h2 class="a" style="--d:.2">Five gates between here and the horizon.</h2>
+    <div class="grid g5" id="roadcards">
+      <div class="card"><span class="k">Months 0–12</span><h3>Lab and mesocosm</h3><p>Recipes, leach, radon and seawater-aging tests. Gate: results published, pass criteria met.</p></div>
+      <div class="card"><span class="k">Months 9–24</span><h3>Land test blocks</h3><p>Sealed modules with sensors on a controlled site. Gate: a clean year of data.</p></div>
+      <div class="card"><span class="k">Months 24–42</span><h3>Nearshore pilot</h3><p>Anchor or breakwater blocks in shallow water, fishers present. Gate: regulator sign-off.</p></div>
+      <div class="card"><span class="k">Months 36–60</span><h3>Flagship turbine</h3><p>Gravity-base foundation with a maker and a developer. Gate: novel-material certification.</p></div>
+      <div class="card"><span class="k">Year 5 onward</span><h3>Scale and diversify</h3><p>Several foundations, breakwaters and anchor blocks running together.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 TRUST AND TEAM -->
+<section class="scene sc-full" id="s10" data-name="Trust and team">
+  <div class="copy">
+    <div class="two">
+      <div>
+        <p class="eyebrow a" style="--d:.1">Earning trust</p>
+        <h2 class="a" style="--d:.2;margin-bottom:16px">We measure. Everyone can see.</h2>
+        <ul class="trust a" style="--d:.5">
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="15" cy="15" r="10"/><path d="M15 9v6l4 3"/></svg><div><b>Independent measurement</b><span>A third-party lab tests every batch. Results go on a public dashboard.</span></div></li>
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="11" r="4"/><circle cx="21" cy="11" r="4"/><path d="M3 24q7-9 14 0M13 24q7-9 14 0"/></svg><div><b>Fishers at the table</b><span>A community board of fishers and residents reviews monitoring and can trigger inspections.</span></div></li>
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l9 4v7q0 7-9 11-9-4-9-11V8z"/><path d="M11 15l3 3 5-6"/></svg><div><b>A removal guarantee</b><span>If monitoring fails, we retrieve the modules, funded by a reserve held outside the company.</span></div></li>
+          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="15" cy="15" r="10"/><path d="M8 22L22 8"/></svg><div><b>No cover for pollution</b><span>This complements ending the discharge. It does not replace it.</span></div></li>
+        </ul>
+      </div>
+      <div>
+        <p class="eyebrow a" style="--d:.3">Who builds it</p>
+        <div class="team a" style="--d:.5;margin-top:12px">
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>CEO and founder</span><span class="when">Now</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>CTO, materials and chemical engineer</span><span class="when">Now</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Radiological safety officer</span><span class="when">Now</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Marine and structural engineer</span><span class="when">Months 0–6</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Environmental scientist</span><span class="when">Months 0–6</span></div>
+          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Regulatory and legal counsel</span><span class="when">Months 0–6</span></div>
+        </div>
+        <p class="small a" style="--d:.8;margin:12px 0 0">Backed by a university materials lab <span class="ph">[partner]</span> and an independent scientific committee that reviews our data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 THE ASK -->
+<section class="scene sc-left" id="s11" data-name="The ask">
+  <div class="copy copy-left">
+    <p class="eyebrow a" style="--d:.1">Gabès, restored · The ask</p>
+    <h2 class="a" style="--d:.2">Fund the first proof.</h2>
+    <p class="lede a" style="--d:.4"><span class="ph">[€ X million]</span> takes us from the lab to a monitored nearshore pilot, and sets up the first turbine foundation.</p>
+    <ul class="funds a wide" style="--d:.6;max-width:min(520px,100%)">
+      <li>Lab and mesocosm tests <i>[XX%]</i></li><li>Land test blocks <i>[XX%]</i></li><li>Nearshore pilot <i>[XX%]</i></li><li>Team, certification and monitoring reserve <i>[XX%]</i></li>
+    </ul>
+    <ul class="miles a wide" style="--d:.85;max-width:min(560px,100%)">
+      <li><i>Month 12</i><span>Results published, pass criteria met</span></li>
+      <li><i>Month 24</i><span>A full year of land-test data</span></li>
+      <li><i>Month 42</i><span>Regulator-signed nearshore pilot</span></li>
+      <li><i>Month 60</i><span>Flagship gravity-base turbine foundation</span></li>
+    </ul>
+    <p class="small a" style="--d:1.05">Placeholder projection: about 1.5% of the yearly discharge handled by year 5. We start with proof, then scale. Contact: <span class="ph">[name · email]</span></p>
+  </div>
+</section>
+
+<!-- labels anchored to world points: data-s = scene number, data-p = x,y,z -->
+<div class="lbl w l" data-s="1" data-p="100,4,-104"><span>Discharge canal · slurry to the sea</span></div>
+<div class="lbl r" data-s="1" data-p="74,92,-168"><span>GCT fertilizer complex</span></div>
+<div class="lbl w" data-s="2" data-p="236,-1.5,-36"><span>Fishing boat · empty nets</span></div>
+<div class="lbl r" data-s="2" data-p="233,-9,-21"><span>Empty net · no catch</span></div>
+<div class="lbl r" data-s="3" data-p="366,-51,-13"><span>Lost net on the dead seabed</span></div>
+<div class="lbl w" data-s="3" data-p="384,-52,-22"><span>≈ 60 km² of seabed buried (estimate)</span></div>
+<div class="lbl" data-s="4" data-ph="1" data-p="588,16.4,-27"><span>Gate</span></div>
+<div class="lbl w" data-s="4" data-ph="1" data-p="600,1.2,-15.5"><span>Outfall → the gulf</span></div>
+<div class="lbl" data-s="4" data-ph="1" data-p="614,17,-47"><span>Filter presses</span></div>
+<div class="lbl w" data-s="4" data-ph="2" data-p="664,8,-32"><span>Filter cake → casting line</span></div>
+<div class="lbl" data-s="4" data-ph="2" data-p="652,23,-54"><span>Binder silos</span></div>
+<div class="lbl l" data-s="4" data-ph="2" data-p="730,22,-48"><span>Module casting yard</span></div>
+<div class="lbl w" data-s="4" data-ph="1" data-p="514,9.2,-27"><span>Plant outlet · GCT slurry</span></div>
+<div class="lbl" data-s="6" data-ph="1" data-p="910,40,-40"><span>Offshore wind turbine</span></div>
+<div class="lbl" data-s="6" data-ph="1" data-p="910,-14,-40"><span>Gravity base below</span></div>
+<div class="lbl" data-s="6" data-ph="2" data-p="914,-9,-40"><span>Gravity base · fully removable</span></div>
+<div class="lbl" data-s="6" data-ph="2" data-p="926.5,-24.5,-40"><span>Marine concrete shell</span></div>
+<div class="lbl l" data-s="6" data-ph="2" data-p="901.5,-17,-40"><span>HDPE liner</span></div>
+<div class="lbl w" data-s="6" data-ph="2" data-p="910,-21,-41"><span>Core: phosphogypsum + binder</span></div>
+<div class="lbl" data-s="7" data-ph="1" data-p="1062,5,-72"><span>Breakwater</span></div>
+<div class="lbl" data-s="7" data-ph="1" data-p="1145,2.2,-86"><span>Floating solar</span></div>
+<div class="lbl" data-s="7" data-ph="2" data-p="1164,-16.5,-75"><span>Anchor blocks</span></div>
+<div class="lbl" data-s="7" data-ph="2" data-p="1182,-15.5,-40"><span>Reef-base blocks</span></div>
+<div class="lbl" data-s="7" data-ph="2" data-p="1236,-9,-58"><span>Tidal turbine base</span></div>
+<div class="lbl" data-s="8" data-p="1352,7,-96"><span>Modules shipping to a wind farm</span></div>
+<div class="lbl num" data-s="9" data-p="1438,6.3,-34"><span>1</span></div>
+<div class="lbl num" data-s="9" data-p="1466,6.3,-86"><span>2</span></div>
+<div class="lbl num" data-s="9" data-p="1430,6.3,-150"><span>3</span></div>
+<div class="lbl num" data-s="9" data-p="1474,6.3,-232"><span>4</span></div>
+<div class="lbl num" data-s="9" data-p="1448,6.3,-340"><span>5</span></div>
+
+<nav class="dock" aria-label="Scenes">
+  <span class="now" id="now"></span>
+  <button class="nb" id="prev" type="button" aria-label="Previous scene">←</button>
+  <div class="segs" id="segs"></div>
+  <button class="nb" id="next" type="button" aria-label="Next scene">→</button>
+  <button class="nb fs" id="fs" type="button" aria-label="Fullscreen">⤢</button>
+</nav>
+<div class="hint" id="hint">← → keys, swipe, or the arrows · F for fullscreen</div>
+<script>
+/* if setup fails, show why instead of hanging on the curtain */
+addEventListener('error', function (e) { var c = document.querySelector('.curtain'); if (c && !document.body.classList.contains('ready')) { c.style.cssText += ';white-space:pre-wrap;text-align:center;padding:24px;color:#f2b24c'; c.textContent = 'Could not start the 3D scene:\n' + (e.message || e) + '\n' + (e.filename ? 'line ' + e.lineno + ':' + e.colno : ''); } });
+</script>
+<script>/*BUNDLE*/</script>
+</body>
+</html>
