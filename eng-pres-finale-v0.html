@@ -1,64 +1,104 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"/>
 <title>Gabès Phosphogypsum Ballast</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <style>
-/* Layout: a live 3D world fills the screen; each stop's copy floats over it on a soft scrim. */
+/* =====================================================================
+   DESIGN TOKENS
+   Every font size, gap and safe-zone on every slide comes from here.
+   Sizes follow BOTH viewport width and height (min of the two), so dense
+   slides shrink on short screens instead of overflowing.
+   ===================================================================== */
 :root{
-  --ink:#06141b; --text:#e9f3f0; --muted:#a3bcb9;
+  --ink:#06141b; --text:#eef6f3; --muted:#b0c6c3;
   --warn:#f2b24c; --clean:#4fd6c4; --alarm:#e5694b;
-  --glass:rgba(6,20,27,.62); --line:rgba(255,255,255,.14);
+  --glass:rgba(6,20,27,.78); --line:rgba(255,255,255,.16);
   --f-display:'Bricolage Grotesque','Segoe UI Variable Display','Segoe UI','Helvetica Neue',Arial,sans-serif;
   --f-body:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Consolas,Menlo,monospace;
   color-scheme:dark;
+
+  /* type scale (min 11px labels · 13px card text · 14px body) */
+  --fs-label:clamp(11px,min(.82vw,1.5vh),13px);   /* mono eyebrows, tags, 3D labels */
+  --fs-small:clamp(12.5px,min(.95vw,1.7vh),15px); /* captions, chips, units */
+  --fs-card:clamp(13px,min(1.02vw,1.85vh),16px);  /* text inside cards, tables, lists */
+  --fs-body:clamp(14px,min(1.15vw,2vh),18px);     /* general body copy */
+  --fs-lede:clamp(16px,min(1.45vw,2.5vh),22px);   /* intro paragraphs */
+  --fs-h3:clamp(15px,min(1.4vw,2.4vh),21px);      /* card / node titles */
+  --fs-stat:clamp(20px,min(2.1vw,3.6vh),34px);    /* stat values */
+  --fs-big:clamp(26px,min(2.7vw,4.8vh),44px);     /* hero numbers */
+  --fs-h2:clamp(26px,min(3.3vw,5.2vh),52px);
+  --fs-h1:clamp(30px,min(4.2vw,6.8vh),66px);
+
+  /* spacing + safe zones (brand badge on top, dock at the bottom) */
+  --gap:clamp(8px,1.5vh,18px);
+  --top-safe:clamp(84px,11.5vh,104px);
+  --bot-safe:clamp(84px,11vh,108px);
+  --col:clamp(320px,42vw,660px);                  /* text column on left-aligned slides */
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--f-body);font-size:var(--fs-body);line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button{font:inherit;color:inherit;cursor:pointer}
 #gl{position:fixed;inset:0}
 #gl canvas{display:block;width:100%;height:100%}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.07;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 55% 50%,transparent 55%,rgba(0,0,0,.42) 100%)}
-.curtain{position:fixed;inset:0;z-index:30;background:var(--ink);display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;color:var(--muted);transition:opacity 1.2s}
+.curtain{position:fixed;inset:0;z-index:30;background:var(--ink);display:grid;place-items:center;font-family:var(--f-mono);font-size:var(--fs-small);letter-spacing:.14em;color:var(--muted);transition:opacity 1.2s}
 body.ready .curtain{opacity:0;pointer-events:none}
 
-/* ---------- scenes (copy only; the world is behind) ---------- */
+/* =====================================================================
+   SCENES: copy sits on a scrim above the live 3D world
+   ===================================================================== */
 .scene{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .6s,visibility 0s .6s}
 .scene.active{opacity:1;visibility:visible;transition:opacity .8s}
 .scene::before{content:"";position:absolute;inset:0;pointer-events:none}
-.sc-left::before{background:linear-gradient(90deg,rgba(4,12,16,.74),rgba(4,12,16,.42) 34%,rgba(4,12,16,0) 58%)}
-.sc-top::before{background:linear-gradient(180deg,rgba(4,12,16,.72),rgba(4,12,16,.18) 30%,rgba(4,12,16,0) 48%,rgba(4,12,16,.6) 100%)}
-.sc-full::before{background:rgba(4,12,16,.66);backdrop-filter:blur(2px)}
-.copy{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,1.6vh,18px);
-  padding:clamp(64px,9vh,100px) max(clamp(20px,5vw,96px),env(safe-area-inset-right,0px)) clamp(84px,12vh,116px) max(clamp(20px,5vw,96px),env(safe-area-inset-left,0px));
-  overflow-y:auto;scrollbar-width:none}
-.copy::-webkit-scrollbar{display:none}
-.copy>*{pointer-events:auto;flex:none}
-.copy-left>*:not(.wide){max-width:clamp(300px,40vw,620px)}
-.copy-top{justify-content:flex-start}
-.eyebrow{margin:0;font-family:var(--f-mono);font-size:clamp(11px,.9vw,13px);letter-spacing:.16em;text-transform:uppercase;color:var(--clean)}
+.sc-left::before{background:linear-gradient(90deg,rgba(4,12,16,.84),rgba(4,12,16,.56) 36%,rgba(4,12,16,0) 64%)}
+.sc-top::before{background:linear-gradient(180deg,rgba(4,12,16,.82),rgba(4,12,16,.3) 32%,rgba(4,12,16,0) 50%,rgba(4,12,16,.66) 100%)}
+.sc-full::before{background:rgba(4,12,16,.74);backdrop-filter:blur(2px)}
+
+/* Layout rule for every slide:
+   - content is centred vertically when it fits (auto margins on first/last child)
+   - when it does NOT fit it starts at the top, so a title is never cut off
+   - top-aligned slides (.copy-top) keep the title at the top and push .grid to the bottom */
+.copy{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:flex-start;gap:var(--gap);
+  padding:calc(var(--top-safe) + env(safe-area-inset-top,0px)) max(clamp(20px,5vw,96px),env(safe-area-inset-right,0px)) var(--bot-safe) max(clamp(20px,5vw,96px),env(safe-area-inset-left,0px));
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.28) transparent}
+.copy::-webkit-scrollbar{width:6px}
+.copy::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:3px}
+.copy>*{pointer-events:auto;flex:none;min-width:0}
+.copy>:first-child{margin-top:auto}
+.copy>:last-child{margin-bottom:auto}
+.copy-top>:first-child{margin-top:0}
+.copy-top>:last-child{margin-bottom:0}
+.copy-left>*:not(.wide){max-width:var(--col)}
+
+/* ---------- typography ---------- */
+.eyebrow{margin:0;font-family:var(--f-mono);font-size:var(--fs-label);font-weight:500;line-height:1.4;letter-spacing:.16em;text-transform:uppercase;color:var(--clean)}
 .eyebrow.warn{color:var(--warn)}
-h1,h2{margin:0;font-family:var(--f-display);font-weight:700;letter-spacing:-.025em;line-height:1.02;text-wrap:balance;text-shadow:0 2px 28px rgba(0,0,0,.45)}
-h1{font-size:clamp(32px,4.6vw,76px)} h2{font-size:clamp(28px,3.6vw,58px)}
+h1,h2{margin:0;max-width:min(100%,1200px);font-family:var(--f-display);font-weight:700;letter-spacing:-.025em;line-height:1.08;text-wrap:balance;text-shadow:0 2px 28px rgba(0,0,0,.55)}
+h1{font-size:var(--fs-h1)} h2{font-size:var(--fs-h2)}
 .hl{color:var(--warn)} .hl-c{color:var(--clean)}
-.lede{margin:0;font-size:clamp(15px,1.3vw,20px);line-height:1.5;color:#dbe9e6;text-shadow:0 1px 14px rgba(0,0,0,.6)}
-.small{font-size:clamp(12px,.95vw,14px);color:var(--muted)}
-.stats{display:flex;flex-wrap:wrap;gap:clamp(14px,2.2vw,36px);margin:0}
+.lede{margin:0;font-size:var(--fs-lede);line-height:1.5;color:#e3efec;text-shadow:0 1px 14px rgba(0,0,0,.65)}
+.small{font-size:var(--fs-small);line-height:1.45;color:var(--muted)}
+p.small{margin:0}
+.stats{display:flex;flex-wrap:wrap;gap:var(--gap) clamp(16px,2.4vw,40px);margin:0}
 .stats.wide{max-width:min(780px,100%)}
-.stats dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.stats dd{margin:2px 0 0;font-family:var(--f-display);font-weight:650;font-size:clamp(20px,2.1vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 1px 14px rgba(0,0,0,.5)}
+.stats dt{font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stats dd{margin:3px 0 0;font-family:var(--f-display);font-weight:650;font-size:var(--fs-stat);line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 1px 14px rgba(0,0,0,.55)}
 .stats dd.bad{color:var(--alarm)}
-.ticker{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;color:var(--muted);display:flex;gap:8px;align-items:baseline}
-.ticker b{color:var(--warn);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;min-width:4ch}
+.ticker{margin:0;font-family:var(--f-mono);font-size:var(--fs-small);letter-spacing:.06em;color:var(--muted);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.ticker b{color:var(--warn);font-size:var(--fs-h3);font-weight:600;font-variant-numeric:tabular-nums;min-width:4ch}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:rgba(6,20,27,.55);backdrop-filter:blur(6px);padding:5px 11px;border-radius:99px;font-size:clamp(12px,.95vw,14px)}
-.chip.c{border-color:rgba(79,214,196,.5);color:var(--clean)}
-.note{border-left:3px solid var(--warn);padding:8px 14px;background:rgba(6,20,27,.62);font-size:clamp(13px,1vw,15px);color:#e8e2cf;backdrop-filter:blur(6px)}
+.chip{border:1px solid var(--line);background:rgba(6,20,27,.72);backdrop-filter:blur(6px);padding:5px 12px;border-radius:99px;font-size:var(--fs-small);line-height:1.35}
+.chip.c{border-color:rgba(79,214,196,.55);color:var(--clean)}
+.note{border-left:3px solid var(--warn);padding:10px 16px;background:rgba(6,20,27,.78);font-size:var(--fs-card);line-height:1.5;color:#efe9d6;backdrop-filter:blur(6px)}
 .ph{border-bottom:1px dashed var(--warn);color:#ffe3ae;white-space:nowrap}
+
+/* ---------- entrance animation (unchanged behaviour) ---------- */
 .a{opacity:0}
 .scene.active .a{animation:rise .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0)*1s + .15s)}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
@@ -67,121 +107,225 @@ body.shot .scene,body.shot .curtain{transition:none!important}
 
 /* ---------- cards ---------- */
 .grid{display:grid;gap:clamp(10px,1.2vw,18px);margin-top:auto}
-.g4{grid-template-columns:repeat(4,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g5{grid-template-columns:repeat(5,minmax(0,1fr))}
-.card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:6px;padding:clamp(12px,1.3vw,20px);min-width:0}
-.card h3{margin:0 0 4px;font-family:var(--f-display);font-size:clamp(15px,1.25vw,19px);font-weight:650;letter-spacing:-.01em}
-.card p{margin:0;font-size:clamp(12px,.95vw,14.5px);color:#c9dbd8;line-height:1.4}
-.card .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
-.big{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3vw,46px);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;margin:6px 0;color:var(--warn)}
-.big small{font-size:.42em;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
-.tag{display:inline-block;margin-top:8px;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;padding:2px 8px;border-radius:3px;background:rgba(242,178,76,.16);color:var(--warn)}
-.bar{display:flex;gap:3px;height:32px;margin-top:10px;clip-path:inset(0 100% 0 0)}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))} .g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:clamp(12px,min(1.3vw,2.2vh),20px);min-width:0}
+.card h3{margin:0 0 6px;font-family:var(--f-display);font-size:var(--fs-h3);font-weight:650;line-height:1.2;letter-spacing:-.01em}
+.card p{margin:0;font-size:var(--fs-card);line-height:1.45;color:#d3e2df}
+.card .k{display:block;margin-bottom:8px;font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.big{font-family:var(--f-display);font-weight:700;font-size:var(--fs-big);letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums;margin:6px 0;color:var(--warn)}
+.big small{font-family:var(--f-body);font-size:var(--fs-small);font-weight:500;color:var(--muted);letter-spacing:0;margin-left:6px}
+.tag{display:inline-block;margin-top:10px;font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.06em;padding:2px 8px;border-radius:3px;background:rgba(242,178,76,.18);color:var(--warn)}
+.bar{display:flex;gap:3px;height:clamp(26px,4vh,34px);margin-top:10px;clip-path:inset(0 100% 0 0)}
 .scene.active .bar{animation:wipe 1.5s cubic-bezier(.3,.7,.2,1) 1s both}
 body.shot .bar{animation:none;clip-path:none}
 @keyframes wipe{to{clip-path:inset(0 0 0 0)}}
-.bar span{flex:var(--w) 1 0;min-width:0;display:flex;align-items:center;padding:0 10px;font-size:12px;font-family:var(--f-mono);white-space:nowrap;overflow:hidden;color:#06141b;font-weight:500}
+.bar span{flex:var(--w) 1 0;min-width:0;display:flex;align-items:center;padding:0 10px;font-size:var(--fs-label);font-family:var(--f-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#06141b;font-weight:600}
 .total{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
-.total b{font-family:var(--f-display);font-size:clamp(24px,2.8vw,42px);color:var(--warn);letter-spacing:-.03em}
+.total b{font-family:var(--f-display);font-size:var(--fs-big);color:var(--warn);letter-spacing:-.03em;line-height:1.1}
 
-/* ---------- module steps ---------- */
+/* ---------- module steps (slide 4) ---------- */
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:10px 14px 10px 10px;border:1px solid var(--line);border-radius:6px;background:rgba(6,20,27,.55);backdrop-filter:blur(6px);cursor:pointer;transition:border-color .4s,background .4s}
-.steps li .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;border:1px solid var(--line);color:var(--muted);transition:all .4s}
-.steps li b{display:block;font-family:var(--f-display);font-size:clamp(15px,1.25vw,19px);font-weight:650}
-.steps li span.d{font-size:clamp(12px,.95vw,14px);color:#c1d5d2}
-.steps li.on{border-color:rgba(79,214,196,.7);background:rgba(10,50,56,.72)}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:10px 14px 10px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(6,20,27,.7);backdrop-filter:blur(6px);cursor:pointer;transition:border-color .4s,background .4s}
+.steps li .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:var(--fs-small);border:1px solid var(--line);color:var(--muted);transition:all .4s}
+.steps li b{display:block;font-family:var(--f-display);font-size:var(--fs-h3);font-weight:650;line-height:1.2}
+.steps li span.d{display:block;margin-top:2px;font-size:var(--fs-card);line-height:1.4;color:#d0e0dd}
+.steps li.on{border-color:rgba(79,214,196,.75);background:rgba(10,50,56,.82)}
 .steps li.on .n{background:var(--clean);color:#06141b;border-color:var(--clean)}
-.btn{pointer-events:auto;border:1px solid rgba(79,214,196,.6);background:rgba(10,50,56,.65);color:var(--clean);padding:8px 16px;border-radius:99px;font-size:13px;font-family:var(--f-mono);letter-spacing:.04em;backdrop-filter:blur(6px)}
-.btn:hover,.btn.on{background:rgba(79,214,196,.2)}
-.modctl{position:absolute;z-index:4;right:max(6vw,env(safe-area-inset-right,0px));top:clamp(70px,11vh,110px);display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:auto}
-.cap{font-family:var(--f-mono);font-size:clamp(11px,.95vw,14px);letter-spacing:.05em;color:var(--clean);text-shadow:0 1px 10px rgba(0,0,0,.7)}
+.btn{pointer-events:auto;border:1px solid rgba(79,214,196,.65);background:rgba(10,50,56,.78);color:var(--clean);padding:9px 18px;border-radius:99px;font-size:var(--fs-small);font-family:var(--f-mono);letter-spacing:.04em;backdrop-filter:blur(6px)}
+.btn:hover,.btn.on{background:rgba(79,214,196,.22)}
+.modctl{position:absolute;z-index:4;right:max(5vw,env(safe-area-inset-right,0px));top:var(--top-safe);display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:auto}
+.cap{max-width:min(380px,34vw);text-align:right;padding:7px 12px;border-radius:6px;background:rgba(4,12,16,.74);backdrop-filter:blur(6px);font-family:var(--f-mono);font-size:var(--fs-small);line-height:1.4;letter-spacing:.04em;color:var(--clean)}
+.cap:empty{display:none}
 
 /* ---------- 3D-anchored labels ---------- */
-.lbl{position:fixed;left:0;top:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .5s;font-family:var(--f-mono);font-size:clamp(11px,.85vw,13px);letter-spacing:.04em;color:var(--text);white-space:nowrap}
+.lbl{position:fixed;left:0;top:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .5s;font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.04em;color:var(--text);white-space:nowrap}
 .lbl.on{opacity:1}
-.lbl>span{position:absolute;left:10px;top:-11px;padding:3px 8px;border-radius:3px;background:rgba(4,12,16,.72);border-left:2px solid var(--clean);backdrop-filter:blur(4px)}
+.lbl>span{position:absolute;left:10px;top:-12px;padding:4px 9px;border-radius:3px;background:rgba(4,12,16,.82);border-left:2px solid var(--clean);backdrop-filter:blur(4px)}
 .lbl.w>span{border-color:var(--warn)} .lbl.r>span{border-color:var(--alarm)}
 .lbl.l>span{left:auto;right:10px}
 .lbl::before{content:"";position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--clean);box-shadow:0 0 0 4px rgba(79,214,196,.25)}
 .lbl.w::before{background:var(--warn);box-shadow:0 0 0 4px rgba(242,178,76,.25)} .lbl.r::before{background:var(--alarm);box-shadow:0 0 0 4px rgba(229,105,75,.25)}
-.lbl.num>span{left:-13px;top:-40px;width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%;border:2px solid var(--clean);font-size:13px}
+.lbl.num>span{left:-14px;top:-42px;width:28px;height:28px;padding:0;display:grid;place-items:center;border-radius:50%;border:2px solid var(--clean);font-size:14px;opacity:0;transition:opacity .6s}
 .lbl.num::before{display:none}
+.lbl.num.lit>span{opacity:1}
 
-/* ---------- business flow ---------- */
-.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:clamp(8px,1.2vw,18px);margin-top:auto;max-width:1180px}
-.node{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:clamp(12px,1.3vw,20px);min-width:0}
-.node.us{border-color:rgba(79,214,196,.6);background:rgba(8,40,46,.72)}
-.node b{display:block;font-family:var(--f-display);font-size:clamp(16px,1.4vw,21px);font-weight:650}
-.node span{display:block;font-size:clamp(12px,.95vw,14px);color:var(--muted)}
+/* ---------- business flow (slide 7) ---------- */
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:clamp(8px,1.2vw,18px);margin-top:auto;max-width:1240px}
+.node{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:clamp(12px,min(1.3vw,2.2vh),20px);min-width:0}
+.node.us{border-color:rgba(79,214,196,.65);background:rgba(8,40,46,.85)}
+.node b{display:block;font-family:var(--f-display);font-size:var(--fs-h3);font-weight:650;line-height:1.2}
+.node span{display:block;margin-top:3px;font-size:var(--fs-small);line-height:1.4;color:var(--muted)}
 .arrow{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:clamp(110px,13vw,190px)}
 .arrow svg{width:100%;height:34px;overflow:visible}
-.arrow .lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center}
-.arrow .pay{font-family:var(--f-display);font-size:clamp(14px,1.15vw,17px);color:var(--warn);text-align:center}
+.arrow .lab{font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.3}
+.arrow .pay{font-family:var(--f-display);font-size:var(--fs-card);color:var(--warn);text-align:center}
 .dash{stroke-dasharray:6 7;animation:dash 1.2s linear infinite}
 @keyframes dash{to{stroke-dashoffset:-26}}
 
-/* ---------- road ---------- */
-.road .card{opacity:.3;transform:translateY(10px);transition:opacity .7s,transform .7s,border-color .7s}
+/* ---------- road (slide 9) ---------- */
+.road .card{opacity:.4;transform:translateY(10px);transition:opacity .7s,transform .7s,border-color .7s}
 .road .card.on{opacity:1;transform:none;border-color:rgba(79,214,196,.6)}
 .road .card.cur{border-color:var(--clean);box-shadow:0 0 0 1px var(--clean),0 0 28px rgba(79,214,196,.35);transform:translateY(-4px)}
 .road .card.cur .k{color:var(--clean)}
-/* phase numbers over the road beacons appear one by one as the camera reaches them */
-.lbl.num>span{opacity:0;transition:opacity .6s}
-.lbl.num.lit>span{opacity:1}
 
-/* ---------- trust / team ---------- */
-.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(18px,3vw,56px);align-items:start}
-.trust{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+/* ---------- trust (slide 10) ---------- */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(16px,3vw,48px);align-items:stretch}
+.trust{display:grid;gap:var(--gap);margin:0;padding:0;list-style:none}
 .trust li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
 .trust svg{width:30px;height:30px}
-.trust b{font-family:var(--f-display);font-size:clamp(15px,1.3vw,20px);font-weight:650;display:block}
-.trust span{font-size:clamp(12px,.98vw,14.5px);color:#c9dbd8}
-.team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,1vw,14px)}
-.person{background:var(--glass);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0;backdrop-filter:blur(8px)}
-.avatar{width:44px;height:44px;border-radius:50%;border:1px dashed rgba(242,178,76,.7);display:grid;place-items:center;font-family:var(--f-mono);color:var(--warn);margin-bottom:8px}
-.person b{display:block;font-size:clamp(13px,1.05vw,15px);font-weight:600}
-.person span{font-size:clamp(11px,.9vw,13px);color:var(--muted);display:block;line-height:1.3}
-.person .when{margin-top:6px;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--clean)}
-.funds{display:grid;gap:4px;margin:0;padding:0;list-style:none}
-.funds li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 0;font-size:clamp(13px,1.05vw,16px)}
-.funds li i{font-style:normal;font-family:var(--f-mono);color:var(--warn)}
-.miles{display:grid;gap:8px;margin:0;padding:0;list-style:none}
-.miles li{display:grid;grid-template-columns:78px 1fr;gap:10px;font-size:clamp(13px,1.05vw,16px)}
-.miles li i{font-style:normal;font-family:var(--f-mono);font-size:12px;color:var(--clean);padding-top:2px}
+.trust b{display:block;font-family:var(--f-display);font-size:var(--fs-h3);font-weight:650;line-height:1.2;margin-bottom:2px}
+.trust span{font-size:var(--fs-card);line-height:1.45;color:#d3e2df}
+#s10 .trust{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,2.4vh,24px) clamp(24px,3vw,48px)}
 
-/* ---------- chrome ---------- */
-.brand{position:fixed;z-index:20;top:max(14px,env(safe-area-inset-top,0px));left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px;pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.6)}
-.brand b{font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.02em}
-.brand span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+/* ---------- lists, tables, meters ---------- */
+.funds{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.funds li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 14px;border-bottom:1px solid var(--line);padding:7px 0;font-size:var(--fs-card);line-height:1.4}
+.funds li i{font-style:normal;font-family:var(--f-mono);font-size:var(--fs-small);color:var(--warn)}
+.miles{display:none}
+
+.tbl{width:100%;border-collapse:separate;border-spacing:0;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tbl th{padding:11px 18px;text-align:left;font:500 var(--fs-label) var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.tbl td{padding:clamp(10px,1.6vh,16px) 18px;vertical-align:middle;font-size:var(--fs-body);line-height:1.4;color:#d3e2df;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td b{display:block;font-family:var(--f-display);font-weight:650;font-size:var(--fs-h3);color:var(--text)}
+.tbl td.us{color:var(--text)}
+.tbl td.us b{display:inline;font-family:inherit;font-size:inherit;font-weight:650}  /* inline emphasis stays the size of its sentence */
+.dens{display:grid;grid-template-columns:9.5em minmax(0,1fr) 7.5em;align-items:center;gap:10px;font-family:var(--f-mono);font-size:var(--fs-small);color:var(--muted)}
+.dens+.dens{margin-top:8px}
+.dens em{font-style:normal;color:var(--warn);text-align:right;white-space:nowrap}
+.meter{height:9px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}
+.meter .fill{display:block;height:100%;width:var(--w);background:var(--clean);transform-origin:left;transform:scaleX(0)}
+.scene.active .meter .fill{animation:grow 1.3s cubic-bezier(.3,.7,.2,1) 1s both}
+body.shot .meter .fill{animation:none;transform:none}
+@keyframes grow{to{transform:scaleX(1)}}
+
+.phases{list-style:none;margin:0;padding:0 0 0 24px;border-left:2px solid rgba(79,214,196,.4);display:grid;gap:var(--gap)}
+.phases li{position:relative;background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+.phases li::before{content:"";position:absolute;left:-32px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--clean);box-shadow:0 0 0 4px rgba(79,214,196,.25)}
+.phases li:nth-child(2)::before{background:var(--warn);box-shadow:0 0 0 4px rgba(242,178,76,.25)}
+.phases li:nth-child(3)::before{background:var(--muted);box-shadow:0 0 0 4px rgba(176,198,195,.25)}
+.phases .when{display:block;margin-bottom:6px;font-family:var(--f-mono);font-size:var(--fs-label);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--clean)}
+.phases .r{padding:2px 0;font-size:var(--fs-body);line-height:1.45;color:#d3e2df}
+.phases .r b{font-family:var(--f-display);font-weight:650;color:var(--text)}
+
+.mini{width:100%;border-collapse:collapse;font-size:var(--fs-card)}
+.mini td{padding:6px 0;border-bottom:1px solid var(--line);color:#d3e2df;line-height:1.35}
+.mini td+td{padding-left:12px;text-align:right;font-family:var(--f-mono);font-size:var(--fs-small);color:var(--text);white-space:nowrap}
+.mini tr.sum td{color:var(--text);font-weight:600}
+.mini tr.sum td+td{color:var(--warn)}
+.mini tr.neg td+td{color:var(--alarm)}
+.rb{display:grid;grid-template-columns:2.6em minmax(0,1fr) auto;align-items:center;gap:10px;margin:8px 0;font-family:var(--f-mono);font-size:var(--fs-small);color:var(--muted)}
+.rb b{font-weight:500;color:var(--text);text-align:right;white-space:nowrap}
+
+/* ---------- per-slide adjustments (sizes all come from the tokens above) ---------- */
+#s1 h1{max-width:min(790px,100%)}
+#s16 .mini td+td{white-space:normal}
+#s11{--col:min(700px,52vw)}
+#s11 h2{font-size:calc(var(--fs-h2)*.92)}
+#s11 .funds{max-width:min(660px,100%)}
+#s13 .copy-left>*{max-width:min(900px,100%)}
+
+/* slide 12 (competition): drop the inline 10vh gap so the table is not pushed off-balance */
+#s12 .copy>div{margin-top:clamp(28px,7vh,80px)!important}
+
+/* slide 14 (financial model): drop the inline 50px gap; keep heading top, content centred in each card */
+#s14 .grid{margin-top:var(--gap)!important}
+#s14 .card{display:flex;flex-direction:column;justify-content:flex-start}
+#s14 .card .k{text-align:left}
+#s14 .card .k + *{margin-top:auto}
+#s14 .card > :last-child{margin-bottom:auto}
+#s14 .rb[style*="grid-template-columns"]{grid-template-columns:5em minmax(0,1fr) auto!important}  /* room for "150 TND" */
+
+/* slide 15 (technology): remove the inline 18px gap, rely on --gap */
+#s15 .grid{margin-top:var(--gap)!important}
+
+/* merged projections slide: timeline */
+#sproj .tl{display:grid;grid-template-columns:clamp(84px,9vw,140px) repeat(5,minmax(0,1fr));column-gap:clamp(8px,1vw,16px);row-gap:var(--gap);align-items:center}
+#sproj .lab{font:500 var(--fs-label) var(--f-mono);letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--muted)}
+#sproj .br{padding:6px 10px 8px;text-align:center;border-bottom:3px solid var(--clean);background:linear-gradient(0deg,rgba(79,214,196,.14),transparent)}
+#sproj .br.s1{grid-column:2/5}
+#sproj .br.s2{grid-column:5/7;border-color:var(--warn);background:linear-gradient(0deg,rgba(242,178,76,.16),transparent)}
+#sproj .br small{display:block;font:500 var(--fs-label) var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#sproj .br b{font:700 var(--fs-big) var(--f-display);letter-spacing:-.02em}
+#sproj .br.s1 b{color:var(--clean)} #sproj .br.s2 b{color:var(--warn)}
+#sproj .yr{position:relative;border-top:3px solid rgba(79,214,196,.4);padding-top:16px;text-align:center}
+#sproj .yr.s2{border-top-color:rgba(242,178,76,.45)}
+#sproj .yr::before{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:15px;height:15px;border-radius:50%;background:var(--clean);box-shadow:0 0 0 5px rgba(79,214,196,.25)}
+#sproj .yr.s2::before{background:var(--warn);box-shadow:0 0 0 5px rgba(242,178,76,.25)}
+#sproj .yr .y{display:block;font:500 var(--fs-label) var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#sproj .yr b{display:block;font:650 var(--fs-h3) var(--f-display);line-height:1.2;margin-top:2px}
+#sproj .c{text-align:center}
+#sproj .v{font:700 var(--fs-stat) var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:5px}
+#sproj .v.sm{font-size:var(--fs-h3);color:#d3e2df;margin:0}
+#sproj .v.neg{color:var(--alarm)}
+#sproj .ft{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,1.2vw,18px)}
+#sproj .eq{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;font:700 var(--fs-h3) var(--f-display);line-height:1.3}
+#sproj .eq i{font:500 var(--fs-label) var(--f-mono);font-style:normal;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+#sproj .eq em{font-style:normal;color:var(--muted)} #sproj .eq .hot{color:var(--warn)}
+
+/* =====================================================================
+   CHROME: brand badge, dock, slide counter
+   ===================================================================== */
+.brand{position:fixed;z-index:20;top:max(14px,env(safe-area-inset-top,0px));left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;pointer-events:none;max-width:min(86vw,680px);padding:9px 14px 10px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(4,12,16,.82);backdrop-filter:blur(10px);line-height:1.2;text-shadow:0 1px 10px rgba(0,0,0,.6)}
+.brand b{display:block;font-family:var(--f-display);font-weight:700;font-size:clamp(14px,min(1.1vw,2vh),16px);letter-spacing:.02em;line-height:1.2;overflow-wrap:anywhere}
+.brand span{display:block;font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);line-height:1.25}
 .dock{position:fixed;z-index:20;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.4vw,18px);
   padding:30px max(16px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-  background:linear-gradient(0deg,rgba(4,12,16,.78),rgba(4,12,16,0))}
-.nb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(6,20,27,.65);backdrop-filter:blur(6px);display:grid;place-items:center;font-size:16px;line-height:1}
+  background:linear-gradient(0deg,rgba(4,12,16,.86),rgba(4,12,16,0))}
+.nb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(6,20,27,.72);backdrop-filter:blur(6px);display:grid;place-items:center;font-size:16px;line-height:1}
 .nb:hover{border-color:var(--clean);color:var(--clean)}
 .nb:focus-visible,.seg:focus-visible,.steps li:focus-visible,.btn:focus-visible{outline:2px solid var(--clean);outline-offset:3px}
 .segs{display:flex;gap:6px;min-width:0}
 .seg{width:clamp(14px,3vw,46px);height:22px;padding:0;border:0;background:none;position:relative}
-.seg i{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);transition:background .4s}
-.seg:hover i{background:rgba(255,255,255,.45)} .seg.on i{background:var(--clean)} .seg.done i{background:rgba(79,214,196,.5)}
-.now{position:absolute;left:max(clamp(16px,2.2vw,32px),env(safe-area-inset-left,0px));bottom:max(22px,env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+.seg i{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.24);transition:background .4s}
+.seg:hover i{background:rgba(255,255,255,.5)} .seg.on i{background:var(--clean)} .seg.done i{background:rgba(79,214,196,.55)}
+/* slide counter: centred just above the dock so it can never collide with the progress bar */
+.now{position:absolute;left:50%;transform:translateX(-50%);bottom:58px;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-family:var(--f-mono);font-size:var(--fs-label);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);pointer-events:none}
 .fs{position:absolute;right:max(clamp(16px,2.2vw,32px),env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px))}
-.hint{position:fixed;z-index:20;left:50%;bottom:64px;transform:translateX(-50%);font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);transition:opacity 1s;pointer-events:none;white-space:nowrap;opacity:0}
+.hint{position:fixed;z-index:20;left:50%;bottom:80px;transform:translateX(-50%);font-family:var(--f-mono);font-size:var(--fs-small);letter-spacing:.08em;color:var(--muted);transition:opacity 1s;pointer-events:none;white-space:nowrap;opacity:0}
 #nogl[hidden]{display:none}
 #nogl{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:var(--ink);padding:24px;text-align:center}
 
-@media (max-width:900px){
-  .copy{justify-content:flex-start;padding-top:70px}
-  .steps li .d{display:none}
-  .g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))} .g3,.two{grid-template-columns:1fr}
-  .flow{grid-template-columns:1fr} .arrow{min-width:0}
-  .team{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .copy-left>*:not(.wide){max-width:100%}
-  .now,.hint,.fs,.brand span{display:none}
-  .sc-left::before{background:linear-gradient(180deg,rgba(4,12,16,.8),rgba(4,12,16,.5) 60%,rgba(4,12,16,.2))}
-  .stats dd{font-size:20px}
-  .lbl{display:none}
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (max-width:1100px){
+  .g5{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-@media (max-width:900px) and (max-height:760px){.card p,.person span{display:none}}
+@media (max-height:740px){            /* 1280x720 projectors, small laptops */
+  :root{--gap:8px;--top-safe:80px;--bot-safe:78px}
+}
+@media (max-width:900px){             /* tablets and phones: stack and scroll */
+  :root{
+    --top-safe:98px;--bot-safe:88px;--gap:12px;
+    --fs-h1:clamp(30px,8.4vw,42px);--fs-h2:clamp(26px,7vw,36px);--fs-h3:17px;--fs-lede:17px;
+    --fs-body:15px;--fs-card:14px;--fs-small:13px;--fs-label:11.5px;--fs-stat:22px;--fs-big:30px;
+    --col:100%;
+  }
+  .copy>:first-child{margin-top:0}
+  .copy>:last-child{margin-bottom:0}
+  .copy-left>*:not(.wide){max-width:100%}
+  #s11{--col:100%}
+  .g3,.two{grid-template-columns:1fr}
+  .g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #s14 .grid,#s20 .grid,#s13 .grid,#sproj .ft{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr} .arrow{min-width:0}
+  #s10 .trust{grid-template-columns:1fr}
+  .steps li .d{display:block}
+  .dens{grid-template-columns:8em minmax(0,1fr) 6.5em}
+  #sproj .tl{overflow-x:auto;grid-template-columns:76px repeat(5,minmax(96px,1fr))}
+  .sc-left::before{background:linear-gradient(180deg,rgba(4,12,16,.86),rgba(4,12,16,.62) 60%,rgba(4,12,16,.36))}
+  .now,.hint,.fs{display:none}
+  .lbl{display:none}
+  /* slide 4 control bar moves to the bottom so it never covers the text */
+  .modctl{top:auto;bottom:calc(var(--bot-safe) - 10px);left:16px;right:16px;flex-direction:row;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(8px)}
+  .cap{max-width:none;text-align:left;padding:0;background:none;backdrop-filter:none}
+  #s5 .copy{padding-bottom:calc(var(--bot-safe) + 56px)}
+}
+@media (max-width:560px){
+  .brand span{display:none}
+  :root{--top-safe:84px}
+}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -189,234 +333,320 @@ body.shot .bar{animation:none;clip-path:none}
 <div id="gl"></div>
 <div class="vig"></div><div class="grain"></div>
 <div class="curtain">BUILDING THE GULF OF GABÈS…</div>
-<div id="nogl" hidden><p>This pitch needs WebGL. Please open it in an up-to-date Chrome, Edge or Firefox.</p></div>
-
-<header class="brand"><b>Gabès Phosphogypsum Ballast</b><span>Investor pitch · <span class="ph">[Company name]</span></span></header>
-
+<div hidden="" id="nogl"><p>This pitch needs WebGL. Please open it in an up-to-date Chrome, Edge or Firefox.</p></div>
+<header class="brand"><b>Gabès Phosphogypsum Ballast</b><span>Investor pitch · Gypseal</span></header>
 <!-- 1 THE SHORE -->
-<section class="scene sc-left" id="s1" data-name="The shore">
-  <div class="copy copy-left">
-    <p class="eyebrow warn a" style="--d:.1">Gulf of Gabès · Tunisia</p>
-    <h1 class="a" style="--d:.25">Every day, <span class="hl">14,000 tonnes</span> of waste reach this sea.</h1>
-    <p class="lede a" style="--d:.45">Phosphogypsum from the fertilizer plant has been discharged here for 50 years. No cleanup, reuse or closure plan has been carried out.</p>
-    <dl class="stats wide a" style="--d:.65">
-      <div><dt>Per day</dt><dd>12,500–15,000 t</dd></div>
-      <div><dt>Per year</dt><dd>≈ 4 million t</dd></div>
-      <div><dt>Accumulated</dt><dd>70–200+ Mt</dd></div>
-    </dl>
-    <p class="ticker a" style="--d:.85">Discharged since this scene opened <b id="tick">0.0</b> tonnes</p>
-  </div>
+<section class="scene sc-left" data-name="The shore" id="s1">
+<div class="copy copy-left">
+<p class="eyebrow warn a" style="--d:.1">Gulf of Gabès · Tunisia</p>
+<h1 class="a" style="--d:.25">Every day, <span class="hl">14,000 tonnes</span> of waste reach this sea.</h1>
+<p class="lede a" style="--d:.45">Phosphogypsum from the fertilizer plant has been discharged here for 50 years. No cleanup, reuse or closure plan has been carried out.</p>
+<dl class="stats wide a" style="--d:.65">
+<div><dt>Per day</dt><dd>12,500–15,000 t</dd></div>
+<div><dt>Per year</dt><dd>≈ 4 million t</dd></div>
+<div><dt>Accumulated</dt><dd>70–200+ Mt</dd></div>
+</dl>
+<p class="ticker a" style="--d:.85">Discharged since this scene opened <b id="tick">0.0</b> tonnes</p>
+</div>
+</section>
+<section class="scene sc-top" data-name="Who pays" id="s3">
+<div class="copy copy-top">
+<p class="eyebrow warn a" style="--d:.1">The seabed · who pays</p>
+<h2 class="a" style="--d:.2">The sea is not the only thing that pays.</h2>
+<div class="grid g4 a" style="--d:.5">
+<div class="card"><span class="k">Fishers</span><div class="big"><span data-count="47">47</span>%<small>of the loss</small></div><p>The largest share. Daily catch income fell from up to <b>700</b> to about <b>20 TND</b>.</p></div>
+<div class="card"><span class="k">Tourism and hotels</span><div class="big"><span data-count="25">25</span> M<small>TND a year</small></div><p>Occupancy stays well below neighbouring regions. The beaches carry the visible plume.</p><span class="tag">33%</span></div>
+<div class="card"><span class="k">Health system</span><div class="big"><span data-count="10">10</span> M<small>TND a year</small></div><p>A 2018 EU study found a correlation with bronchitis and asthma in three neighbourhoods.</p><span class="tag">13%</span></div>
+<div class="card"><span class="k">Farmers</span><div class="big"><span data-count="5">5</span> M<small>TND a year</small></div><p>Lower productivity and abandoned plots.</p><span class="tag">7%</span></div>
+</div>
+<div class="a" style="--d:.8">
+<div class="total"><b><span data-count="76">76</span> M TND a year</b><span class="small">2015 only, about 200 TND per inhabitant. Not every harm is counted, so treat it as a floor.</span></div>
+<div class="bar"><span style="--w:47;background:#f2b24c">Fishing 47%</span><span style="--w:33;background:#e5694b">Tourism 33%</span><span style="--w:13;background:#d8c27a">Health 13%</span><span style="--w:7;background:#a8bdb8"></span></div>
+</div>
+</div>
+</section>
+<section class="scene sc-left" data-name="Intercept" id="s4">
+<div class="copy copy-left">
+<p class="eyebrow a" style="--d:.1">Our answer · Step 1</p>
+<h2 class="a" style="--d:.2">Stop it before it reaches the sea.</h2>
+<p class="lede a" style="--d:.4">We take fresh slurry at the plant outlet, before discharge. This is the step that actually reduces what enters the gulf.</p>
+<div class="chips a" style="--d:.6"><span class="chip c">Agreement with GCT and the state needed</span></div>
+<p class="note a" style="--d:.8">Scope: solid phosphogypsum only. The gas emissions behind the 2025 protests are a separate problem, and we do not claim to fix them.</p>
+</div>
+</section>
+<section class="scene sc-left" data-name="The module" id="s5">
+<div class="copy copy-left">
+<p class="eyebrow a" style="--d:.1">Our answer · Step 2</p>
+<h2 class="a" style="--d:.2">Turn loose waste into a sealed block.</h2>
+<ol class="steps a" id="steps" style="--d:.45">
+<li tabindex="0"><span class="n">1</span><div><b>Dewater and measure</b><span class="d">Filter presses make solid cake. Every batch is tested for radium and metals by gamma spectrometry.</span></div></li>
+<li tabindex="0"><span class="n">2</span><div><b>Stabilize</b><span class="d">A binder locks contaminants into a solid and cuts leaching and radon release.</span></div></li>
+<li tabindex="0"><span class="n">3</span><div><b>Encapsulate</b><span class="d">An HDPE liner, then a marine-grade concrete shell. Cured, tested and certified before it ships.</span></div></li>
+</ol>
+<p class="lede a" style="--d:.7">Three barriers: binder, liner, shell. No single failure causes a release.</p>
+</div>
+<div class="modctl a" style="--d:.9"><div class="cap" id="cap"></div><button class="btn" id="peel" type="button">See inside</button></div>
+</section>
+<section class="scene sc-left" data-name="The turbine" id="s6">
+<div class="copy copy-left">
+<p class="eyebrow a" style="--d:.1">Product 1 · Wind foundation ballast</p>
+<h2 class="a" style="--d:.25">It starts with a turbine.</h2>
+<p class="lede a" style="--d:.45">Offshore gravity bases need cheap, heavy, permanent mass. Our module fills the foundation and never touches open water.</p>
+<dl class="stats wide a" style="--d:.65">
+<div><dt>Ballast, one large base</dt><dd>19–27 kt</dd></div>
+<div><dt>Plant discharge absorbed</dt><dd>≈ 2 days</dd></div>
+</dl>
+<div class="chips a" style="--d:.85"><span class="chip c">Gravity base</span><span class="chip c">Fully removable</span><span class="chip">Shallow shelf (to verify)</span></div>
+<p class="small a" style="--d:1">Our entry product and our proof, not the whole answer.</p>
+</div>
+</section>
+<section class="scene sc-top" data-name="The horizon" id="s7">
+<div class="copy copy-top">
+<p class="eyebrow a" style="--d:.1">Then the horizon opens</p>
+<h2 class="a" style="--d:.2">Same module, more places to put it.</h2>
+<div class="grid g3">
+<div class="card a" style="--d:.7"><span class="k">Product 2</span><h3>Breakwater and reef-base blocks</h3><p>Coastal defence, underwater. First buyer: coastal and port authorities.</p></div>
+<div class="card a" style="--d:1.2"><span class="k">Product 3</span><h3>Anchor and sinker blocks</h3><p>Seabed anchors for floating solar, buoys, platforms. First buyer: floating solar and marine energy developers.</p></div>
+<div class="card a" style="--d:1.7"><span class="k">Product 4</span><h3>Tidal and wave device foundations</h3><p>Same logic as wind gravity bases. First buyer: marine energy startups.</p></div>
+</div>
+</div>
+</section>
+<section class="scene sc-top" data-name="Business model" id="s8">
+<div class="copy copy-top">
+<p class="eyebrow a" style="--d:.1">Business model</p>
+<h2 class="a" style="--d:.2">One tonne, two payers.</h2>
+<p class="lede a" style="--d:.4">We are paid to take the waste away, and paid again for the certified module we make from it.</p>
+<div class="flow a" style="--d:.7">
+<div class="node"><b>State and GCT</b><span>Development funders · EU · EBRD · AfDB</span></div>
+<div class="arrow"><span class="lab">Pays to remove a liability</span>
+<svg preserveaspectratio="none" viewbox="0 0 160 34"><path class="dash" d="M4 12 H150" fill="none" stroke="#d8c27a" stroke-width="2.4"></path><path d="M146 6 L156 12 L146 18" fill="none" stroke="#d8c27a" stroke-width="2.4"></path><path class="dash" d="M156 26 H10" fill="none" stroke="#f2b24c" stroke-width="2.4" style="animation-direction:reverse"></path></svg>
+<span class="pay">Intake fee / t (DT)</span></div>
+<div class="node us"><b>Our plant</b><span>Waste in · sealed modules out</span></div>
+<div class="arrow"><span class="lab">Pays for certified ballast</span>
+<svg preserveaspectratio="none" viewbox="0 0 160 34"><path class="dash" d="M4 12 H150" fill="none" stroke="#4fd6c4" stroke-width="2.4"></path><path d="M146 6 L156 12 L146 18" fill="none" stroke="#4fd6c4" stroke-width="2.4"></path><path class="dash" d="M156 26 H10" fill="none" stroke="#f2b24c" stroke-width="2.4"></path></svg>
+<span class="pay">Module price / t (DT)</span></div>
+<div class="node"><b>Developers and ports</b><span>Foundation makers · developers · port and coastal authorities</span></div>
+</div>
+<div class="chips a" style="--d:1"><span class="chip">Also: monitoring-as-a-service contracts</span><span class="chip">Grants for pilots and R&amp;D</span></div>
+</div>
+</section>
+<section class="scene sc-top" data-name="Technology" id="s15">
+<div class="copy copy-top">
+<p class="eyebrow a" style="--d:.1">The technology</p>
+<h2 class="a" style="--d:.2">Three barriers. The <span class="hl">binder</span> is what we must prove.</h2>
+<p class="lede a" style="--d:.4">One thing works inside the material, two work around it. No single failure causes a release.</p>
+<div class="grid g3 a" style="--d:.6;margin-top:18px">
+<div class="card"><span class="k">Core · inside</span><h3>Phosphogypsum + stabilizing binder</h3><p>Gives the module its mass and locks metals and radium into a solid. Must show: low leaching, retained radium, stable under seawater.</p></div>
+<div class="card"><span class="k">Liner · second wall</span><h3>HDPE or similar</h3><p>Blocks water in and leachate out if water ever reaches the core. Must show: no tears or weld failures over 25 years.</p></div>
+<div class="card"><span class="k">Shell · outside</span><h3>Marine-grade concrete</h3><p>Sulfate-resisting, with corrosion-proof rebar. Carries loads, shields gamma, resists seawater. Thickness sized from each batch's measured activity.</p></div>
+</div>
+<p class="eyebrow a" style="--d:.8;margin-top:6px">Before anything goes in the sea, we prove</p>
+<div class="chips a" style="--d:.9"><span class="chip">Leaching</span><span class="chip">Radon and gamma</span><span class="chip">Swelling under confinement</span><span class="chip">25-year seawater durability</span><span class="chip">Impact and breach</span></div>
+<p class="note a" style="--d:1.05">Nobody has published this exact module, but the building blocks are studied. Pass criteria are agreed with the regulator and a university lab before testing. No patent yet: the binder recipe is the IP to protect.</p>
+</div>
+</section>
+<section class="scene sc-top road" data-name="The road" id="s9">
+<div class="copy copy-top">
+<p class="eyebrow a" style="--d:.1">The road to the first turbine</p>
+<h2 class="a" style="--d:.2">Five gates between here and the horizon.</h2>
+<div class="grid g5" id="roadcards">
+<div class="card"><span class="k">Months 0–12</span><h3>Lab and mesocosm</h3><p>Recipes, leach, radon and seawater-aging tests. Gate: results published, pass criteria met.</p></div>
+<div class="card"><span class="k">Months 9–24</span><h3>Land test blocks</h3><p>Sealed modules with sensors on a controlled site. Gate: a clean year of data.</p></div>
+<div class="card"><span class="k">Months 24–42</span><h3>Nearshore pilot</h3><p>Anchor or breakwater blocks in shallow water, fishers present. Gate: regulator sign-off.</p></div>
+<div class="card"><span class="k">Months 36–60</span><h3>Flagship turbine</h3><p>Gravity-base foundation with a maker and a developer. Gate: novel-material certification.</p></div>
+<div class="card"><span class="k">Year 5 onward</span><h3>Scale and diversify</h3><p>Several foundations, breakwaters and anchor blocks running together.</p></div>
+</div>
+</div>
+</section>
+<section class="scene sc-full" data-name="Earning trust" id="s10">
+<div class="copy">
+<div style="max-width:min(1100px,100%)">
+<div>
+<p class="eyebrow a" style="--d:.1">Earning trust</p>
+<h2 class="a" style="--d:.2;margin-bottom:16px">We measure. Everyone can see.</h2>
+<ul class="trust a" style="--d:.5">
+<li><svg fill="none" stroke="#4fd6c4" stroke-linecap="round" stroke-width="2" viewbox="0 0 30 30"><circle cx="15" cy="15" r="10"></circle><path d="M15 9v6l4 3"></path></svg><div><b>Independent measurement</b><span>A third-party lab tests every batch. Results go on a public dashboard.</span></div></li>
+<li><svg fill="none" stroke="#4fd6c4" stroke-linecap="round" stroke-width="2" viewbox="0 0 30 30"><circle cx="10" cy="11" r="4"></circle><circle cx="21" cy="11" r="4"></circle><path d="M3 24q7-9 14 0M13 24q7-9 14 0"></path></svg><div><b>Fishers at the table</b><span>A community board of fishers and residents reviews monitoring and can trigger inspections.</span></div></li>
+<li><svg fill="none" stroke="#4fd6c4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 30 30"><path d="M15 4l9 4v7q0 7-9 11-9-4-9-11V8z"></path><path d="M11 15l3 3 5-6"></path></svg><div><b>A removal guarantee</b><span>If monitoring fails, we retrieve the modules, funded by a reserve held outside the company.</span></div></li>
+<li><svg fill="none" stroke="#4fd6c4" stroke-linecap="round" stroke-width="2" viewbox="0 0 30 30"><circle cx="15" cy="15" r="10"></circle><path d="M8 22L22 8"></path></svg><div><b>No cover for pollution</b><span>This complements ending the discharge. It does not replace it.</span></div></li>
+</ul>
+</div>
+<p class="small a" style="--d:.8;margin:18px 0 0">An independent scientific committee reviews our data, so the results do not rest on our word alone.</p>
+</div>
+</div>
+</section>
+<section class="scene sc-top" data-name="Competition" id="s12">
+<div class="copy copy-top">
+<p class="eyebrow a" style="--d:.1">Competition · why we can stand out</p>
+<h2 class="a" style="--d:.2">No one seals it at sea yet. <span class="hl">Cost</span> is the fight.</h2>
+<div class="a" style="--d:.5;overflow-x:auto;margin-top:10vh">
+<table class="tbl">
+<tr><th>Alternative</th><th>How it compares</th><th>Our position</th></tr>
+<tr><td><b>Iron-ore ballast</b></td>
+<td><div class="dens"><span>Iron ore</span><div class="meter"><span class="fill" style="--w:100%"></span></div><em>4–5 t/m³</em></div>
+<div class="dens"><span>Phosphogypsum</span><div class="meter"><span class="fill" style="--w:46%;background:var(--warn)"></span></div><em>≈ 2.3 t/m³</em></div></td>
+<td class="us">Target <b style="display:inline">gravity foundations</b></td></tr>
+<tr><td><b>Sand, gravel, rock</b></td><td>Already cheap</td><td class="us">Modules must become <b style="display:inline">cost-competitive</b></td></tr>
+<tr><td><b>Other reuse(Roads, bricks, etc.)</b></td><td>Material ends up in everyday products</td><td class="us">Keep it <b style="display:inline">sealed in a protective structure</b> away from people</td></tr>
+<tr><td><b>Doing nothing</b></td><td>Costs the waste owner nothing</td><td class="us">Public pressure and environmental damage grow</td></tr>
+</table>
+</div>
+</div>
 </section>
 
-<!-- 2 THE PLUME -->
-<section class="scene sc-left" id="s2" data-name="The plume">
+<section class="scene sc-left" id="s13" data-name="Expertise">
   <div class="copy copy-left">
-    <p class="eyebrow warn a" style="--d:.1">Below the surface</p>
-    <h2 class="a" style="--d:.2">A milky plume the fish swim away from.</h2>
-    <p class="lede a" style="--d:.4">The slurry clouds the water and settles across the shelf. Fish die or move off, and the nets come up empty.</p>
-    <dl class="stats wide a" style="--d:.6">
-      <div><dt>Fisher income per day</dt><dd><span class="hl">700</span> → <span style="color:var(--alarm)">20 TND</span></dd></div>
-      <div><dt>Share of the yearly loss</dt><dd>47%</dd></div>
-    </dl>
-    <p class="small a" style="--d:.8">Fishing carries the largest share of the damage.</p>
-  </div>
-</section>
-
-<!-- 3 THE SEABED / WHO PAYS -->
-<section class="scene sc-top" id="s3" data-name="Who pays">
-  <div class="copy copy-top">
-    <p class="eyebrow warn a" style="--d:.1">The seabed · who pays</p>
-    <h2 class="a" style="--d:.2">The sea is not the only thing that pays.</h2>
-    <div class="grid g4 a" style="--d:.5">
-      <div class="card"><span class="k">Fishers</span><div class="big"><span data-count="47">47</span>%<small>of the loss</small></div><p>The largest share. Daily catch income fell from up to <b>700</b> to about <b>20 TND</b>.</p></div>
-      <div class="card"><span class="k">Tourism and hotels</span><div class="big"><span data-count="25">25</span> M<small>TND a year</small></div><p>Occupancy stays well below neighbouring regions. The beaches carry the visible plume.</p><span class="tag">33%</span></div>
-      <div class="card"><span class="k">Health system</span><div class="big"><span data-count="10">10</span> M<small>TND a year</small></div><p>A 2018 EU study found a correlation with bronchitis and asthma in three neighbourhoods.</p><span class="tag">13%</span></div>
-      <div class="card"><span class="k">Farmers</span><div class="big"><span data-count="5">5</span> M<small>TND a year</small></div><p>Lower productivity and abandoned plots.</p><span class="tag">7%</span></div>
-    </div>
-    <div class="a" style="--d:.8">
-      <div class="total"><b><span data-count="76">76</span> M TND a year</b><span class="small">2015 only, about 200 TND per inhabitant. Not every harm is counted, so treat it as a floor.</span></div>
-      <div class="bar"><span style="--w:47;background:#f2b24c">Fishing 47%</span><span style="--w:33;background:#e5694b">Tourism 33%</span><span style="--w:13;background:#d8c27a">Health 13%</span><span style="--w:7;background:#a8bdb8"></span></div>
-    </div>
-  </div>
-</section>
-
-<!-- 4 INTERCEPT -->
-<section class="scene sc-left" id="s4" data-name="Intercept">
-  <div class="copy copy-left">
-    <p class="eyebrow a" style="--d:.1">Our answer · Step 1</p>
-    <h2 class="a" style="--d:.2">Stop it before it reaches the sea.</h2>
-    <p class="lede a" style="--d:.4">We take fresh slurry at the plant outlet, before discharge. This is the step that actually reduces what enters the gulf.</p>
-    <div class="chips a" style="--d:.6"><span class="chip c">Agreement with GCT and the state needed</span></div>
-    <p class="note a" style="--d:.8">Scope: solid phosphogypsum only. The gas emissions behind the 2025 protests are a separate problem, and we do not claim to fix them.</p>
-  </div>
-</section>
-
-<!-- 5 THE MODULE -->
-<section class="scene sc-left" id="s5" data-name="The module">
-  <div class="copy copy-left">
-    <p class="eyebrow a" style="--d:.1">Our answer · Step 2</p>
-    <h2 class="a" style="--d:.2">Turn loose waste into a sealed block.</h2>
-    <ol class="steps a" style="--d:.45" id="steps">
-      <li tabindex="0"><span class="n">1</span><div><b>Dewater and measure</b><span class="d">Filter presses make solid cake. Every batch is tested for radium and metals by gamma spectrometry.</span></div></li>
-      <li tabindex="0"><span class="n">2</span><div><b>Stabilize</b><span class="d">A binder locks contaminants into a solid and cuts leaching and radon release.</span></div></li>
-      <li tabindex="0"><span class="n">3</span><div><b>Encapsulate</b><span class="d">An HDPE liner, then a marine-grade concrete shell. Cured, tested and certified before it ships.</span></div></li>
+    <p class="eyebrow a" style="--d:.1">More than a good idea</p>
+    <h2 class="a" style="--d:.2">The Team</h2>
+    <p class="lede a wide" style="--d:.4;max-width:min(900px,100%)">Technical, environmental and regulatory challenges, tackled in the right order.</p>
+    <ol class="phases a" style="--d:.6">
+      <li><i class="when">From the beginning</i>
+        <div class="r"><b>CEO</b></div>
+        <div class="r"><b>Materials / chemical engineer</b></div>
+        <div class="r"><b>Radiological safety specialist</b></div></li>
+      <li><i class="when">As the project progresses</i>
+        <div class="r"><b>Marine and structural engineers</b> · <b>Environmental scientists</b> · <b>Legal experts</b></div></li>
+      <li><i class="when">Later · industrial production and financing</i>
+        <div class="r"><b>Plant operations</b> · <b>Finance specialists</b></div></li>
     </ol>
-    <p class="lede a" style="--d:.7">Three barriers: binder, liner, shell. No single failure causes a release.</p>
-  </div>
-  <div class="modctl a" style="--d:.9"><div class="cap" id="cap"></div><button class="btn" id="peel" type="button">See inside</button></div>
-</section>
-
-<!-- 6 THE TURBINE -->
-<section class="scene sc-left" id="s6" data-name="The turbine">
-  <div class="copy copy-left">
-    <p class="eyebrow a" style="--d:.1">Product 1 · Wind foundation ballast</p>
-    <h2 class="a" style="--d:.25">It starts with a turbine.</h2>
-    <p class="lede a" style="--d:.45">Offshore gravity bases need cheap, heavy, permanent mass. Our module fills the foundation and never touches open water.</p>
-    <dl class="stats wide a" style="--d:.65">
-      <div><dt>Ballast, one large base</dt><dd>19–27 kt</dd></div>
-      <div><dt>Plant discharge absorbed</dt><dd>≈ 2 days</dd></div>
-    </dl>
-    <div class="chips a" style="--d:.85"><span class="chip c">Gravity base</span><span class="chip c">Fully removable</span><span class="chip">Shallow shelf (to verify)</span></div>
-    <p class="small a" style="--d:1">Our entry product and our proof, not the whole answer.</p>
   </div>
 </section>
-
-<!-- 7 THE HORIZON -->
-<section class="scene sc-top" id="s7" data-name="The horizon">
-  <div class="copy copy-top">
-    <p class="eyebrow a" style="--d:.1">Then the horizon opens</p>
-    <h2 class="a" style="--d:.2">Same module, more places to put it.</h2>
-    <div class="grid g3">
-      <div class="card a" style="--d:.7"><span class="k">Product 2</span><h3>Breakwater and reef-base blocks</h3><p>Coastal defence, underwater. First buyer: coastal and port authorities.</p></div>
-      <div class="card a" style="--d:1.2"><span class="k">Product 3</span><h3>Anchor and sinker blocks</h3><p>Seabed anchors for floating solar, buoys, platforms. First buyer: floating solar and marine energy developers.</p></div>
-      <div class="card a" style="--d:1.7"><span class="k">Product 4</span><h3>Tidal and wave device foundations</h3><p>Same logic as wind gravity bases. First buyer: marine energy startups.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- 8 BUSINESS MODEL -->
-<section class="scene sc-top" id="s8" data-name="Business model">
-  <div class="copy copy-top">
-    <p class="eyebrow a" style="--d:.1">Business model</p>
-    <h2 class="a" style="--d:.2">One tonne, two payers.</h2>
-    <p class="lede a" style="--d:.4">We are paid to take the waste away, and paid again for the certified module we make from it.</p>
-    <div class="flow a" style="--d:.7">
-      <div class="node"><b>State and GCT</b><span>Development funders · EU · EBRD · AfDB</span></div>
-      <div class="arrow"><span class="lab">Pays to remove a liability</span>
-        <svg viewBox="0 0 160 34" preserveAspectRatio="none"><path class="dash" d="M4 12 H150" stroke="#d8c27a" stroke-width="2.4" fill="none"/><path d="M146 6 L156 12 L146 18" stroke="#d8c27a" stroke-width="2.4" fill="none"/><path class="dash" d="M156 26 H10" stroke="#f2b24c" stroke-width="2.4" fill="none" style="animation-direction:reverse"/></svg>
-        <span class="pay">Intake fee / t <span class="ph">[€]</span></span></div>
-      <div class="node us"><b>Our plant</b><span>Waste in · sealed modules out</span></div>
-      <div class="arrow"><span class="lab">Pays for certified ballast</span>
-        <svg viewBox="0 0 160 34" preserveAspectRatio="none"><path class="dash" d="M4 12 H150" stroke="#4fd6c4" stroke-width="2.4" fill="none"/><path d="M146 6 L156 12 L146 18" stroke="#4fd6c4" stroke-width="2.4" fill="none"/><path class="dash" d="M156 26 H10" stroke="#f2b24c" stroke-width="2.4" fill="none"/></svg>
-        <span class="pay">Module price / t <span class="ph">[€]</span></span></div>
-      <div class="node"><b>Developers and ports</b><span>Foundation makers · developers · port and coastal authorities</span></div>
-    </div>
-    <div class="chips a" style="--d:1"><span class="chip">Also: monitoring-as-a-service contracts</span><span class="chip">Grants for pilots and R&amp;D</span><span class="chip">Prices to be set from real quotes: <span class="ph">[€ / tonne]</span></span></div>
-  </div>
-</section>
-
-<!-- 9 THE ROAD -->
-<section class="scene sc-top road" id="s9" data-name="The road">
-  <div class="copy copy-top">
-    <p class="eyebrow a" style="--d:.1">The road to the first turbine</p>
-    <h2 class="a" style="--d:.2">Five gates between here and the horizon.</h2>
-    <div class="grid g5" id="roadcards">
-      <div class="card"><span class="k">Months 0–12</span><h3>Lab and mesocosm</h3><p>Recipes, leach, radon and seawater-aging tests. Gate: results published, pass criteria met.</p></div>
-      <div class="card"><span class="k">Months 9–24</span><h3>Land test blocks</h3><p>Sealed modules with sensors on a controlled site. Gate: a clean year of data.</p></div>
-      <div class="card"><span class="k">Months 24–42</span><h3>Nearshore pilot</h3><p>Anchor or breakwater blocks in shallow water, fishers present. Gate: regulator sign-off.</p></div>
-      <div class="card"><span class="k">Months 36–60</span><h3>Flagship turbine</h3><p>Gravity-base foundation with a maker and a developer. Gate: novel-material certification.</p></div>
-      <div class="card"><span class="k">Year 5 onward</span><h3>Scale and diversify</h3><p>Several foundations, breakwaters and anchor blocks running together.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- 10 TRUST AND TEAM -->
-<section class="scene sc-full" id="s10" data-name="Trust and team">
+<section class="scene sc-full" id="s14" data-name="Financial model">
   <div class="copy">
-    <div class="two">
-      <div>
-        <p class="eyebrow a" style="--d:.1">Earning trust</p>
-        <h2 class="a" style="--d:.2;margin-bottom:16px">We measure. Everyone can see.</h2>
-        <ul class="trust a" style="--d:.5">
-          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="15" cy="15" r="10"/><path d="M15 9v6l4 3"/></svg><div><b>Independent measurement</b><span>A third-party lab tests every batch. Results go on a public dashboard.</span></div></li>
-          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="11" r="4"/><circle cx="21" cy="11" r="4"/><path d="M3 24q7-9 14 0M13 24q7-9 14 0"/></svg><div><b>Fishers at the table</b><span>A community board of fishers and residents reviews monitoring and can trigger inspections.</span></div></li>
-          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l9 4v7q0 7-9 11-9-4-9-11V8z"/><path d="M11 15l3 3 5-6"/></svg><div><b>A removal guarantee</b><span>If monitoring fails, we retrieve the modules, funded by a reserve held outside the company.</span></div></li>
-          <li><svg viewBox="0 0 30 30" fill="none" stroke="#4fd6c4" stroke-width="2" stroke-linecap="round"><circle cx="15" cy="15" r="10"/><path d="M8 22L22 8"/></svg><div><b>No cover for pollution</b><span>This complements ending the discharge. It does not replace it.</span></div></li>
-        </ul>
-      </div>
-      <div>
-        <p class="eyebrow a" style="--d:.3">Who builds it</p>
-        <div class="team a" style="--d:.5;margin-top:12px">
-          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>CEO and founder</span><span class="when">Now</span></div>
-          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>CTO, materials and chemical engineer</span><span class="when">Now</span></div>
-          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Radiological safety officer</span><span class="when">Now</span></div>
-          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Marine and structural engineer</span><span class="when">Months 0–6</span></div>
-          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Environmental scientist</span><span class="when">Months 0–6</span></div>
-          <div class="person"><div class="avatar">?</div><b class="ph">[Name]</b><span>Regulatory and legal counsel</span><span class="when">Months 0–6</span></div>
+    <p class="eyebrow a" style="--d:.1">Financial model</p>
+    <h2 class="a" style="--d:.2">An <span class="hl">environmental-impact</span> business. Not a high-margin one.</h2>
+    <div class="grid g3 a" style="--d:.45;margin-top:50px">
+      <div class="card"><span class="k">Per tonne of phosphogypsum</span>
+        <table class="mini">
+          <tr><td>Intake fee (state / funders)</td><td><span class="ph">50 TND</span></td></tr>
+          <tr><td>Module sales (<span class="ph">83 TND</span>/t module, <span class="ph">70%</span> PG)</td><td>≈ 120 TND</td></tr>
+          <tr class="sum"><td>Revenue</td><td>≈ 170 TND</td></tr>
+          <tr><td>Processing cost</td><td><span class="ph">−130 TND</span></td></tr>
+          <tr class="sum"><td>Contribution</td><td>≈ 40 TND</td></tr>
+        </table>
         </div>
-        <p class="small a" style="--d:.8;margin:12px 0 0">Backed by a university materials lab <span class="ph">[partner]</span> and an independent scientific committee that reviews our data.</p>
-      </div>
+      <div class="card"><span class="k">Five-year projection · tonnes sealed</span>
+        <div class="rb"><span>Y1</span><div class="meter"><span class="fill" style="--w:0%"></span></div><b>preparation</b></div>
+        <div class="rb"><span>Y3</span><div class="meter"><span class="fill" style="--w:5%"></span></div><b>3,000 t</b></div>
+        <div class="rb"><span>Y4</span><div class="meter"><span class="fill" style="--w:33%"></span></div><b>20,000 t</b></div>
+        <div class="rb"><span>Y5</span><div class="meter"><span class="fill" style="--w:100%"></span></div><b>60,000 t</b></div>
+        <table class="mini" style="margin-top:6px">
+          <tr><td>Share of yearly discharge</td><td>≈ 1.5%</td></tr>
+          <tr><td>Year 5 revenue</td><td>≈ 10.15 M TND</td></tr>
+          <tr class="neg"><td>Year 5 net cash flow</td><td>-23.6 M TND</td></tr>
+          <tr class="neg"><td>Cumulative shortfall</td><td>−59.15 M TND</td></tr>
+        </table></div>
+      <div class="card"><span class="k">Break-even · fixed costs <span class="ph">10.7 M TND</span> / year</span>
+        <div class="rb" style="grid-template-columns:3em 1fr auto"><span>50 TND</span><div class="meter"><span class="fill" style="--w:100%;background:var(--alarm)"></span></div><b>7.5% · ≈ 300,000 t</b></div>
+        <div class="rb" style="grid-template-columns:3em 1fr auto"><span>100 TND</span><div class="meter"><span class="fill" style="--w:41%;background:var(--warn)"></span></div><b>≈ 3.1%</b></div>
+        <div class="rb" style="grid-template-columns:3em 1fr auto"><span>150 TND</span><div class="meter"><span class="fill" style="--w:27%"></span></div><b>≈ 2%</b></div>
+        </div>
     </div>
+    <p class="note a" style="--d:.8;max-width:1600px">No break-even within five years. Viability depends on someone valuing the removal of the waste, and improves with every extra channel that shares the fixed costs.</p>
   </div>
 </section>
 
-<!-- 11 THE ASK -->
-<section class="scene sc-left" id="s11" data-name="The ask">
-  <div class="copy copy-left">
-    <p class="eyebrow a" style="--d:.1">Gabès, restored · The ask</p>
-    <h2 class="a" style="--d:.2">Fund the first proof.</h2>
-    <p class="lede a" style="--d:.4"><span class="ph">[€ X million]</span> takes us from the lab to a monitored nearshore pilot, and sets up the first turbine foundation.</p>
-    <ul class="funds a wide" style="--d:.6;max-width:min(520px,100%)">
-      <li>Lab and mesocosm tests <i>[XX%]</i></li><li>Land test blocks <i>[XX%]</i></li><li>Nearshore pilot <i>[XX%]</i></li><li>Team, certification and monitoring reserve <i>[XX%]</i></li>
-    </ul>
-    <ul class="miles a wide" style="--d:.85;max-width:min(560px,100%)">
-      <li><i>Month 12</i><span>Results published, pass criteria met</span></li>
-      <li><i>Month 24</i><span>A full year of land-test data</span></li>
-      <li><i>Month 42</i><span>Regulator-signed nearshore pilot</span></li>
-      <li><i>Month 60</i><span>Flagship gravity-base turbine foundation</span></li>
-    </ul>
-    <p class="small a" style="--d:1.05">Placeholder projection: about 1.5% of the yearly discharge handled by year 5. We start with proof, then scale. Contact: <span class="ph">[name · email]</span></p>
-  </div>
+<section class="scene sc-full" data-name="Projections" id="sproj">
+<div class="copy">
+<p class="eyebrow a" style="--d:.1">Financial model · five-year path</p>
+<h2 class="a" style="--d:.2">From proof to first scale—<span class="hl">funded stage by stage</span>.</h2>
+<div class="tl a" style="--d:.4">
+<div class="lab"></div>
+<div class="br s1"><small>Stage 1 · Prove it</small><b>≈ 7M DT</b></div>
+<div class="br s2"><small>Stage 2 · Build it</small><b>≈ 53M DT</b></div>
+<div class="lab"></div><div class="yr s1"><span class="y">Year 1</span><b>Preparation</b></div><div class="yr s1"><span class="y">Year 2</span><b>Early tests</b></div><div class="yr s1"><span class="y">Year 3</span><b>Land proof</b></div><div class="yr s2"><span class="y">Year 4</span><b>First deployment</b></div><div class="yr s2"><span class="y">Year 5</span><b>Expanded operations</b></div>
+<div class="lab">Tonnes sealed</div><div class="c"><div class="v">0</div><div class="meter"><span class="fill" style="--w:0%"></span></div></div><div class="c"><div class="v">300</div><div class="meter"><span class="fill" style="--w:1.5%"></span></div></div><div class="c"><div class="v">3,000</div><div class="meter"><span class="fill" style="--w:5%"></span></div></div><div class="c"><div class="v">20,000</div><div class="meter"><span class="fill" style="--w:33%"></span></div></div><div class="c"><div class="v">60,000</div><div class="meter"><span class="fill" style="--w:100%"></span></div></div>
+<div class="lab">Revenue<br>M DT</div><div class="c"><div class="v sm">0</div></div><div class="c"><div class="v sm">0.07</div></div><div class="c"><div class="v sm">0.51</div></div><div class="c"><div class="v sm">3.43</div></div><div class="c"><div class="v sm">10.34</div></div>
+<div class="lab">Cumulative cash<br>M DT</div><div class="c"><div class="v neg">−1.36</div><div class="meter"><span class="fill" style="--w:2%;background:var(--alarm)"></span></div></div><div class="c"><div class="v neg">−3.06</div><div class="meter"><span class="fill" style="--w:5%;background:var(--alarm)"></span></div></div><div class="c"><div class="v neg">−7.00</div><div class="meter"><span class="fill" style="--w:12%;background:var(--alarm)"></span></div></div><div class="c"><div class="v neg">−36.21</div><div class="meter"><span class="fill" style="--w:60%;background:var(--alarm)"></span></div></div><div class="c"><div class="v neg">−60.21</div><div class="meter"><span class="fill" style="--w:100%;background:var(--alarm)"></span></div></div>
+</div>
+<div class="ft a" style="--d:.6">
+<div class="card"><span class="k">Per tonne</span><div class="eq"><span>172 DT <i>revenue</i></span><em>−</em><span>136 DT <i>cost</i></span><em>=</em><span class="hot">36 DT <i>contribution</i></span></div></div>
+<div class="card"><span class="k">Break-even · ≈ 11M DT fixed costs / year</span><div class="eq"><span>51 DT fee <i>→ 300k t</i></span><span>102 DT fee <i>→ 124k t</i></span><span class="hot">153 DT fee <i>→ 79k t</i></span></div></div>
+</div>
+<p class="note a" style="--d:.8">Capital is released only as evidence gates are passed.</p>
+</div></section>
+<section class="scene sc-full" data-name="Risk and proof plan" id="s20">
+<div class="copy">
+<p class="eyebrow a" style="--d:.1">Risk, openly stated</p>
+<h2 class="a" style="--d:.2">Prove the hard parts before going <span class="hl">near the sea</span>.</h2>
+<p class="lede a" style="--d:.35;max-width:1100px">No track record yet—so every major risk gets a test, a gate and a fallback.</p>
+<div class="grid g3 a" style="--d:.5;margin-top:8px">
+<div class="card"><span class="k">Technical</span><h3>Binder fails, leaches or swells</h3><p>Run swelling, leach, radon and seawater-aging tests first; adjust the binder if needed.</p><h3 style="margin-top:14px">Cost parity fails</h3><p>Get real ballast quotes; the intake fee carries more if needed.</p></div>
+<div class="card"><span class="k">Approval and trust</span><h3>Regulator rejects a novel material</h3><p>Agree pass criteria with the regulator and a university lab before testing.</p><h3 style="margin-top:14px">Greenwashing claims</h3><p>Publish all data; we handle solid phosphogypsum only.</p></div>
+<div class="card"><span class="k">Supply and financing</span><h3>No intake agreement</h3><p>Approach GCT, the state and funders; legacy stockpiles are a fallback.</p><h3 style="margin-top:14px">Capital before revenue</h3><p>Fund in stages; scale up only after evidence gates.</p></div>
+</div></div></section>
+<section class="scene sc-full" data-name="Status" id="s16">
+<div class="copy">
+<p class="eyebrow a" style="--d:.1">Status and timeline</p>
+<h2 class="a" style="--d:.2">A researched concept. <span class="hl">Nothing tested, signed or funded yet.</span></h2>
+<p class="lede a" style="--d:.4">The first 12 months are meant to change that.</p>
+<div class="two a" style="--d:.6;margin-top:14px">
+<div class="card"><span class="k">Where we stand today</span>
+<table class="mini">
+<tr><td>Problem evidence</td><td>Sourced</td></tr>
+<tr><td>Concept and design</td><td>3 layers set</td></tr>
+<tr><td>Business model</td><td>Drafted</td></tr>
+<tr class="neg"><td>Technical proof</td><td>No lab tests</td></tr>
+<tr class="neg"><td>Partners</td><td>None signed</td></tr>
+<tr class="neg"><td>Regulatory path</td><td>Not started</td></tr>
+<tr class="neg"><td>Funding</td><td>None raised</td></tr>
+</table></div>
+<div class="card"><span class="k">The next 90 days</span>
+<ul class="funds">
+<li>Sign a research agreement with a university lab</li>
+<li>Pick 2–3 binders; order the first tests</li>
+<li>Agree the test protocol with the regulator</li>
+<li>Collect a first phosphogypsum sample for testing</li>
+</ul></div>
+</div>
+</div>
 </section>
-
+<section class="scene sc-left" data-name="The ask · seal the waste, prove the future" id="s11">
+<div class="copy copy-left">
+<p class="eyebrow a" style="--d:.1">Gabès, restored · The ask</p>
+<h2 class="a" style="--d:.2">Seal the waste.<br/><span class="hl">Prove the future.</span></h2>
+<p class="lede a" style="--d:.4">Help us turn a legacy waste into a monitored construction input—starting with the science, not with a promise.</p>
+<div class="card a" style="--d:.5;max-width:680px;margin-top:4px"><span class="k">Stage 1 · Prove it · years 1–3</span><div class="big">≈ 7M DT <small>net of expected grants</small></div><p>About 25M DT in gross spend, with ≈ 18M DT in expected grants. If those grants fall short, the Stage 1 need could rise toward 25M DT.</p></div>
+<ul class="funds a wide" style="--d:.65;max-width:min(650px,100%)"><li>Laboratory and mesocosm tests <i>prove safety</i></li><li>Land test blocks and monitoring <i>prove durability</i></li><li>Regulator-agreed test protocol <i>unlock permits</i></li><li>Core technical team and nearshore pilot design <i>prepare deployment</i></li></ul>
+<p class="small a" style="--d:.8;max-width:650px">We will publish the evidence, and advance only when the agreed gates are passed. No tests, partners, permits or funding are claimed as secured today.</p>
+<p class="small a" style="--d:.9">Seeking: investors and development funders · a university materials lab · radiological-safety and regulatory partners · foundation makers and marine developers.</p>
+<p class="eyebrow a" style="--d:1.0;margin-top:4px">One tonne at a time. Contained, measured, accountable.</p>
+</div></section>
 <!-- labels anchored to world points: data-s = scene number, data-p = x,y,z -->
-<div class="lbl w l" data-s="1" data-p="100,4,-104"><span>Discharge canal · slurry to the sea</span></div>
-<div class="lbl r" data-s="1" data-p="74,92,-168"><span>GCT fertilizer complex</span></div>
-<div class="lbl w" data-s="2" data-p="236,-1.5,-36"><span>Fishing boat · empty nets</span></div>
-<div class="lbl r" data-s="2" data-p="233,-9,-21"><span>Empty net · no catch</span></div>
-<div class="lbl r" data-s="3" data-p="366,-51,-13"><span>Lost net on the dead seabed</span></div>
-<div class="lbl w" data-s="3" data-p="384,-52,-22"><span>≈ 60 km² of seabed buried (estimate)</span></div>
-<div class="lbl" data-s="4" data-ph="1" data-p="588,16.4,-27"><span>Gate</span></div>
-<div class="lbl w" data-s="4" data-ph="1" data-p="600,1.2,-15.5"><span>Outfall → the gulf</span></div>
-<div class="lbl" data-s="4" data-ph="1" data-p="614,17,-47"><span>Filter presses</span></div>
-<div class="lbl w" data-s="4" data-ph="2" data-p="664,8,-32"><span>Filter cake → casting line</span></div>
-<div class="lbl" data-s="4" data-ph="2" data-p="652,23,-54"><span>Binder silos</span></div>
-<div class="lbl l" data-s="4" data-ph="2" data-p="730,22,-48"><span>Module casting yard</span></div>
-<div class="lbl w" data-s="4" data-ph="1" data-p="514,9.2,-27"><span>Plant outlet · GCT slurry</span></div>
-<div class="lbl" data-s="6" data-ph="1" data-p="910,40,-40"><span>Offshore wind turbine</span></div>
-<div class="lbl" data-s="6" data-ph="1" data-p="910,-14,-40"><span>Gravity base below</span></div>
-<div class="lbl" data-s="6" data-ph="2" data-p="914,-9,-40"><span>Gravity base · fully removable</span></div>
-<div class="lbl" data-s="6" data-ph="2" data-p="926.5,-24.5,-40"><span>Marine concrete shell</span></div>
-<div class="lbl l" data-s="6" data-ph="2" data-p="901.5,-17,-40"><span>HDPE liner</span></div>
-<div class="lbl w" data-s="6" data-ph="2" data-p="910,-21,-41"><span>Core: phosphogypsum + binder</span></div>
-<div class="lbl" data-s="7" data-ph="1" data-p="1062,5,-72"><span>Breakwater</span></div>
-<div class="lbl" data-s="7" data-ph="1" data-p="1145,2.2,-86"><span>Floating solar</span></div>
-<div class="lbl" data-s="7" data-ph="2" data-p="1164,-16.5,-75"><span>Anchor blocks</span></div>
-<div class="lbl" data-s="7" data-ph="2" data-p="1182,-15.5,-40"><span>Reef-base blocks</span></div>
-<div class="lbl" data-s="7" data-ph="2" data-p="1236,-9,-58"><span>Tidal turbine base</span></div>
-<div class="lbl" data-s="8" data-p="1352,7,-96"><span>Modules shipping to a wind farm</span></div>
-<div class="lbl num" data-s="9" data-p="1438,6.3,-34"><span>1</span></div>
-<div class="lbl num" data-s="9" data-p="1466,6.3,-86"><span>2</span></div>
-<div class="lbl num" data-s="9" data-p="1430,6.3,-150"><span>3</span></div>
-<div class="lbl num" data-s="9" data-p="1474,6.3,-232"><span>4</span></div>
-<div class="lbl num" data-s="9" data-p="1448,6.3,-340"><span>5</span></div>
-
-<nav class="dock" aria-label="Scenes">
-  <span class="now" id="now"></span>
-  <button class="nb" id="prev" type="button" aria-label="Previous scene">←</button>
-  <div class="segs" id="segs"></div>
-  <button class="nb" id="next" type="button" aria-label="Next scene">→</button>
-  <button class="nb fs" id="fs" type="button" aria-label="Fullscreen">⤢</button>
+<div class="lbl w l" data-p="100,4,-104" data-s="1"><span>Discharge canal · slurry to the sea</span></div>
+<div class="lbl r" data-p="74,92,-168" data-s="1"><span>GCT fertilizer complex</span></div>
+<div class="lbl r" data-p="366,-51,-13" data-s="2"><span>Lost net on the dead seabed</span></div>
+<div class="lbl w" data-p="384,-52,-22" data-s="2"><span>≈ 60 km² of seabed buried (estimate)</span></div>
+<div class="lbl" data-p="588,16.4,-27" data-ph="1" data-s="3"><span>Gate</span></div>
+<div class="lbl w" data-p="600,1.2,-15.5" data-ph="1" data-s="3"><span>Outfall → the gulf</span></div>
+<div class="lbl" data-p="614,17,-47" data-ph="1" data-s="3"><span>Filter presses</span></div>
+<div class="lbl w" data-p="664,8,-32" data-ph="2" data-s="3"><span>Filter cake → casting line</span></div>
+<div class="lbl" data-p="652,23,-54" data-ph="2" data-s="3"><span>Binder silos</span></div>
+<div class="lbl l" data-p="730,22,-48" data-ph="2" data-s="3"><span>Module casting yard</span></div>
+<div class="lbl w" data-p="514,9.2,-27" data-ph="1" data-s="3"><span>Plant outlet · GCT slurry</span></div>
+<div class="lbl" data-p="910,40,-40" data-ph="1" data-s="5"><span>Offshore wind turbine</span></div>
+<div class="lbl" data-p="910,-14,-40" data-ph="1" data-s="5"><span>Gravity base below</span></div>
+<div class="lbl" data-p="914,-9,-40" data-ph="2" data-s="5"><span>Gravity base · fully removable</span></div>
+<div class="lbl" data-p="926.5,-24.5,-40" data-ph="2" data-s="5"><span>Marine concrete shell</span></div>
+<div class="lbl l" data-p="901.5,-17,-40" data-ph="2" data-s="5"><span>HDPE liner</span></div>
+<div class="lbl w" data-p="910,-21,-41" data-ph="2" data-s="5"><span>Core: phosphogypsum + binder</span></div>
+<div class="lbl" data-p="1062,5,-72" data-ph="1" data-s="6"><span>Breakwater</span></div>
+<div class="lbl" data-p="1145,2.2,-86" data-ph="1" data-s="6"><span>Floating solar</span></div>
+<div class="lbl" data-p="1164,-16.5,-75" data-ph="2" data-s="6"><span>Anchor blocks</span></div>
+<div class="lbl" data-p="1182,-15.5,-40" data-ph="2" data-s="6"><span>Reef-base blocks</span></div>
+<div class="lbl" data-p="1236,-9,-58" data-ph="2" data-s="6"><span>Tidal turbine base</span></div>
+<div class="lbl" data-p="1352,7,-96" data-s="7"><span>Modules shipping to a wind farm</span></div>
+<div class="lbl num" data-p="1438,6.3,-34" data-s="9"><span>1</span></div>
+<div class="lbl num" data-p="1466,6.3,-86" data-s="9"><span>2</span></div>
+<div class="lbl num" data-p="1430,6.3,-150" data-s="9"><span>3</span></div>
+<div class="lbl num" data-p="1474,6.3,-232" data-s="9"><span>4</span></div>
+<div class="lbl num" data-p="1448,6.3,-340" data-s="9"><span>5</span></div>
+<nav aria-label="Scenes" class="dock">
+<span class="now" id="now"></span>
+<button aria-label="Previous scene" class="nb" id="prev" type="button">←</button>
+<div class="segs" id="segs"></div>
+<button aria-label="Next scene" class="nb" id="next" type="button">→</button>
+<button aria-label="Fullscreen" class="nb fs" id="fs" type="button">⤢</button>
 </nav>
 <div class="hint" id="hint">← → keys, swipe, or the arrows · F for fullscreen</div>
 <script>
@@ -4581,7 +4811,14 @@ float fbm2(vec2 p){ float s=0.,a=.5; for(int i=0;i<4;i++){ s+=a*vn(p); p*=2.03; 
       transformed.x+=sin(uTime*1.3+ip.x*.35+ip.z*.2)*.35*hh*hh; transformed.z+=cos(uTime*1.1+ip.x*.2)*.22*hh*hh;
       #endif`}),r=16e3,o=new we(n,s,r),a=0,c=0,l=new bt,h=new bt("#4f7d37"),u=new bt("#2f5a2a");for(;a<r&&c<4e5;){c++;let w=ut(640,1700),A=ut(-260,90),C=Me(w,A);C>-2.5||C<-36||yi(w*.013,A*.013,3)<.5+Mi()*.08||(e.position.set(w,C-.05,A),e.rotation.set(ut(-.15,.15),ut(0,6),ut(-.15,.15)),e.scale.set(1,ut(.6,1.4),1),e.updateMatrix(),o.setMatrixAt(a,e.matrix),o.setColorAt(a,l.copy(h).lerp(u,Mi())),a++)}o.count=a,t.add(o);let d=Sd(),f=new we(d,St("#7a7466",{r:.95,key:"rk"}),700);f.castShadow=f.receiveShadow=!0;for(let w=0;w<700;w++){let A=ut(-200,1900),C=ut(-260,90),S=ut(.5,3)*(Mi()>.92?2.2:1);e.position.set(A,Me(A,C)-S*.3,C),e.rotation.set(ut(0,3),ut(0,3),ut(0,3)),e.scale.set(S,S*ut(.5,.9),S*ut(.7,1.2)),e.updateMatrix(),f.setMatrixAt(w,e.matrix)}t.add(f);let g=St("#c9d6da",{r:.42,m:.08,side:ye,key:"fish",vert:`#ifdef USE_INSTANCING
       float tw=sin(uTime*11.+float(gl_InstanceID)*2.37); transformed.z+=tw*.14*smoothstep(.1,-.7,position.x);
-      #endif`}),_=[{c:[918,-9,-68],r:14,n:60,sp:.28,s:.75},{c:[878,-16,-48],r:8,n:30,sp:-.4,s:.6},{c:[1180,-14,-36],r:10,n:70,sp:.35,s:.8},{c:[1240,-9,-20],r:18,n:50,sp:-.22,s:1.2},{c:[1110,-6,-30],r:12,n:40,sp:.3,s:.7},{c:[1060,-7,-50],r:8,n:30,sp:.45,s:.6},{c:[700,-5,-10],r:10,n:30,sp:.3,s:.7},{c:[1600,-8,-5],r:14,n:50,sp:.3,s:.8}],m=_.reduce((w,A)=>w+A.n,0),p=new we(_a,g,m);p.frustumCulled=!1,t.add(p);let M=new bt,y=["#c7d3d6","#9fb3ba","#d8c99c","#a9bcc0"],v=[],P=0;return _.forEach((w,A)=>{for(let C=0;C<w.n;C++)v.push({s:w,a:Mi()*6.28,dr:ut(-3,3),dy:ut(-2.2,2.2),ph:ut(0,6)}),p.setColorAt(P++,M.set(y[A%4]))}),Ue.push(w=>{v.forEach((A,C)=>{let S=A.s,x=A.a+w*S.sp*(12/S.r),R=S.r+A.dr+Math.sin(w*.3+A.ph)*1.5;e.position.set(S.c[0]+Math.cos(x)*R,S.c[1]+A.dy+Math.sin(w*.5+A.ph)*.6,S.c[2]+Math.sin(x)*R*.6),e.rotation.set(0,-x+(S.sp>0?-Math.PI/2:Math.PI/2),Math.sin(w+A.ph)*.08),e.scale.setScalar(S.s*(.8+C%5*.08)),e.updateMatrix(),p.setMatrixAt(C,e.matrix)}),p.instanceMatrix.needsUpdate=!0}),t}var Ne,Jl,Mi,ut,ee,Wt,le,ot,Ue,_a,$l,Nn,gd,Ql,Vs,Rd=Ti(()=>{vi();pd();Or();ga();Zl();Ne=I,Jl=3,Mi=()=>(Jl=Jl*16807%2147483647,(Jl-1)/2147483646),ut=(i,t)=>i+Mi()*(t-i),ee=(i,t,e=!0)=>{let n=new ue(i,t);return n.castShadow=e,n.receiveShadow=!0,n},Wt=(i,t,e,n)=>ee(new Ce(i,t,e),n),le=(i,t,e,n,s=24)=>ee(new Qn(i,t,e,s),n),ot=(i,t,e,n)=>(i.position.set(t,e,n),i),Ue=[];_a=Bv();Nn={};Vs=[]});var jv=$d(()=>{vi();rd();Or();ga();Zl();Rd();var We=i=>document.querySelector(i),Ma=i=>[...document.querySelectorAll(i)],Je=Ze.lerp,eh=(i,t,e)=>Ze.smoothstep(e,i,t),Fn=/[?&]shot/.test(location.search);Fn&&document.body.classList.add("shot");var hn;try{hn=new qo({antialias:!0,powerPreference:"high-performance"})}catch(i){throw We("#nogl").hidden=!1,i}hn.setPixelRatio(Math.min(devicePixelRatio,1.75));hn.toneMapping=Ll;hn.outputColorSpace=Re;hn.shadowMap.enabled=!0;hn.shadowMap.type=Pl;hn.localClippingEnabled=!0;We("#gl").appendChild(hn.domElement);var Tn=new Yo,Ee=new Be(52,innerWidth/innerHeight,.3,3e4),xa=new Ur;xa.scale.setScalar(2e4);Tn.add(xa);var wn=new la("#ffffff",3);wn.castShadow=!0;wn.shadow.mapSize.set(2048,2048);Object.assign(wn.shadow.camera,{left:-110,right:110,top:110,bottom:-110,near:1,far:900});wn.shadow.bias=-4e-4;wn.shadow.normalBias=.6;Tn.add(wn,wn.target);var rh=new ca("#bcd9ec","#4a3f30",1.1);Tn.add(rh);var Vr=new Os("#fff1dc",0,90,.62,.7,1.5);Ee.add(Vr);Vr.position.set(.8,-.6,0);Vr.target.position.set(0,-6,-30);Ee.add(Vr.target);Tn.add(Ee);var un=new Kt;Tn.add(un);var{mesh:kv,ht:Vv}=cd();un.add(kv);var Dd=ld(Vv);Tn.add(Dd);Tn.add(ud());var oh=hd();Tn.add(oh);_d(un);xd(un);yd(un);var En=Md(un);un.add(th(910,-40,{base:!0,cut:!0,speed:.75}));[[1e3,-250,.8],[1120,-330,.85],[1260,-255,.8],[1390,-380,.9],[1530,-300,.8],[1190,-540,.9],[1440,-560,.9],[1650,-460,.85],[870,-420,.8]].forEach(([i,t,e])=>un.add(th(i,t,{scale:e,speed:.6+Math.random()*.4})));Ed(un);wd(un);Td(un);Ad(un);var zr=[{p:[-22,7,-22],t:[55,13,-132],shift:.2},{p:[212,-7,-4],t:[236,-9,-32],shift:.2},{p:[354,-45,8],t:[380,-57,-18],shift:0},{p:[564,9.5,10],t:[598,4.6,-28],shift:.2,dive:{p:[688,10,36],t:[690,7,-40],fov:62,dur:4500}},{p:[699.4,8.8,-15.8],t:[706,6.7,-26],shift:.2,fov:46},{p:[868,4,42],t:[904,24,-40],shift:.2,fov:60,dive:{p:[887,-12.5,-2],t:[910,-19.5,-40],fov:54}},{p:[1110,6,50],t:[1150,3,-70],shift:0,fov:60,dive:{p:[1168,-8,6],t:[1192,-15,-60],fov:64}},{p:[1318,10,30],t:[1370,3,-110],shift:0},{p:[1452,13,26],t:[1452,1,-200],shift:0},{p:[1574,3.6,4],t:[1588,2.6,-16],shift:0},{p:[1652,7,44],t:[1740,6,-96],shift:.2}].map(i=>({p:new I(...i.p),t:new I(...i.t),shift:i.shift,fov:i.fov||52,dive:i.dive&&{p:new I(...i.dive.p),t:new I(...i.dive.t),fov:i.dive.fov,dur:i.dive.dur||6e3}})),Qt={p:zr[0].p.clone(),t:zr[0].t.clone(),shift:zr[0].shift,fov:52},Ei=null,sn=-1,Xs=null,Sa=1;function Ud(){let i=zr[sn].dive;if(i){if(Fn){let t=location.search.match(/dk=([\d.]+)/),e=t?+t[1]:1,n=ah(e);Qt.p.lerp(i.p,n),Qt.t.lerp(i.t,n),Qt.fov=Je(Qt.fov,i.fov,n),Sa=e>=1?2:1;return}Xs={p0:Qt.p.clone(),t0:Qt.t.clone(),f0:Qt.fov,d:i,st:performance.now(),dur:i.dur}}}var ah=i=>i<.5?4*i*i*i:1-Math.pow(-2*i+2,3)/2;function Gv(i,t){let e=zr[i];if(t||Fn){Qt.p.copy(e.p),Qt.t.copy(e.t),Qt.shift=e.shift,Qt.fov=e.fov,Ei=null;return}let n=Qt.p.distanceTo(e.p);Ei={p0:Qt.p.clone(),t0:Qt.t.clone(),sh0:Qt.shift,f0:Qt.fov,s:e,st:performance.now(),dur:Math.min(5600,2600+n*6),bulge:Math.min(n*.16,40),rev:!1}}var ya=0;function Wv(i){ya=i>3?1:0}var ti=Ma(".scene"),Nd=We("#segs");ti.forEach((i,t)=>{let e=document.createElement("button");e.className="seg",e.type="button",e.title=i.dataset.name,e.setAttribute("aria-label",`Scene ${t+1}: ${i.dataset.name}`),e.innerHTML="<i></i>",e.addEventListener("click",()=>ei(t)),Nd.appendChild(e)});var qs=[],kr=(i,t)=>qs.push(setTimeout(i,t));function ei(i,t){if(i=Math.max(0,Math.min(ti.length-1,i)),!(i===sn&&!t)){qs.forEach(clearTimeout),qs=[],ti.forEach(e=>e.classList.remove("active")),En.active=!1,sn=i,Xs=null,Sa=1,Wv(i),Gv(i,t),[...Nd.children].forEach((e,n)=>{e.classList.toggle("on",n===i),e.classList.toggle("done",n<i)}),We("#now").textContent=`${i+1} / ${ti.length} \xB7 ${ti[i].dataset.name}`;try{history.replaceState(null,"",location.search+"#s"+(i+1))}catch{}We("#hint").style.opacity=0,Ei||Fd(i)}}function Xv(i){i.querySelectorAll("[data-count]").forEach(t=>{let e=+t.dataset.count,n=performance.now()+500;if(Fn){t.textContent=e;return}let s=r=>{let o=Math.min(1,Math.max(0,(r-n)/1400)),a=1-Math.pow(1-o,3);t.textContent=Math.round(e*a),o<1&&requestAnimationFrame(s)};t.textContent="0",requestAnimationFrame(s)})}var Ji={};function Fd(i){En.active=i===4;let t=ti[i];t.classList.add("active"),Xv(t),Ji[i]?.()}Ji[0]=()=>{let i=performance.now(),t=setInterval(()=>{We("#tick").textContent=((performance.now()-i)/1e3*.162).toFixed(1)},100);qs.push(t)};Ji[5]=Ji[6]=()=>kr(Ud,Fn?0:1600);Ji[3]=()=>{ya=0,kr(()=>{ya=1},Fn?0:2600),kr(Ud,Fn?0:5100)};var Od=Ma("#steps li"),qv=We("#cap"),Yv=["Dewatered cake, tested for radium and metals","Binder locks contaminants into a solid","HDPE liner: a second wall","Marine concrete shell: a certified module"];function Hr(i){En.stage=i,qv.textContent=Yv[i],Od.forEach((t,e)=>t.classList.toggle("on",e===Math.min(Math.max(i-1,0),2)&&i>0||i===0&&e===0))}Ji[4]=()=>{if(En.peel=0,We("#peel").classList.remove("on"),Hr(0),Fn){En.snap=!0,Hr(3),/peel/.test(location.search)&&(En.peel=1);return}[1,2,3].forEach((i,t)=>kr(()=>Hr(i),1700+t*2e3))};Od.forEach((i,t)=>{let e=()=>{qs.forEach(clearTimeout),Hr(t+1)};i.addEventListener("click",e),i.addEventListener("keydown",n=>{(n.key==="Enter"||n.key===" ")&&(n.preventDefault(),n.stopPropagation(),e())})});We("#peel").addEventListener("click",()=>{qs.forEach(clearTimeout),En.stage<3&&Hr(3),En.peel=En.peel?0:1,We("#peel").classList.toggle("on",!!En.peel),We("#peel").textContent=En.peel?"Close it":"See inside"});var Cd=Ma("#roadcards .card");Ji[8]=()=>{let L=Ma('.lbl.num[data-s="9"]'),go=(p,t,dur)=>{Xs={p0:Qt.p.clone(),t0:Qt.t.clone(),f0:Qt.fov,d:{p,t,fov:52},st:performance.now(),dur}};Vs.forEach(i=>i.target=0),Cd.forEach(i=>i.classList.remove("on","cur")),L.forEach(i=>i.classList.remove("lit")),Vs.forEach((i,t)=>kr(()=>{i.target=1,Cd.forEach(c=>c.classList.remove("cur")),Cd[t].classList.add("on","cur"),L[t]&&L[t].classList.add("lit"),Fn||go(i.pos.clone().set(i.pos.x+10,10,i.pos.z+30),i.pos.clone().set(i.pos.x,4,i.pos.z-25),t?2e3:2400)},Fn?0:600+t*3400)),Fn||kr(()=>{Cd.forEach(c=>c.classList.remove("cur")),go(zr[8].p.clone(),zr[8].t.clone(),2800)},600+5*3400)};function Zv(){sn!==8&&Vs.forEach(i=>i.target=0)}We("#prev").addEventListener("click",()=>ei(sn-1));We("#next").addEventListener("click",()=>ei(sn+1));addEventListener("keydown",i=>{i.target.closest&&i.target.closest(".steps li")&&(i.key===" "||i.key==="Enter")||(["ArrowRight","ArrowDown","PageDown"," "].includes(i.key)?(i.preventDefault(),ei(sn+1)):["ArrowLeft","ArrowUp","PageUp"].includes(i.key)?(i.preventDefault(),ei(sn-1)):i.key==="Home"?ei(0):i.key==="End"?ei(ti.length-1):(i.key==="f"||i.key==="F")&&Bd())});function Bd(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch{}}We("#fs").addEventListener("click",Bd);var zd=0,Hd=0;addEventListener("pointerdown",i=>{zd=i.clientX,Hd=i.clientY});addEventListener("pointerup",i=>{let t=i.clientX-zd,e=i.clientY-Hd;Math.abs(t)>60&&Math.abs(e)<80&&i.pointerType!=="mouse"&&ei(sn+(t<0?1:-1))});var kd=0,Vd=0,nh=0,ih=0;addEventListener("pointermove",i=>{kd=i.clientX/innerWidth-.5,Vd=i.clientY/innerHeight-.5});var Jv=Ma(".lbl").map(i=>({el:i,s:+i.dataset.s-1,ph:+(i.dataset.ph||0),p:new I(...i.dataset.p.split(",").map(Number))})),Gs=new I;function $v(){let i=innerWidth,t=innerHeight;Jv.forEach(e=>{let n=e.s===sn&&!Ei&&!Xs&&ti[sn].classList.contains("active")&&(!e.ph||e.ph===Sa);Gs.copy(e.p).project(Ee);let s=n&&Gs.z<1&&Math.abs(Gs.x)<1.05&&Math.abs(Gs.y)<1.05;e.el.classList.toggle("on",s),s&&(e.el.style.transform=`translate(${((Gs.x+1)/2*i).toFixed(1)}px,${((1-Gs.y)/2*t).toFixed(1)}px)`)})}var Si=i=>new bt(i),bi={horD:Si("#c98d5e"),zenD:Si("#2d2a36"),horC:Si("#b9dceb"),zenC:Si("#2e6aa6"),sunD:Si("#ffae6e"),sunC:Si("#fff1dc"),hemD:Si("#8a7569"),hemC:Si("#bcd9ec")},va=new I,Id=new bt;function Kv(){let i=ge.uGate.value,t=od(Qt.p.x,i),e=Je(4.5,42,t)*Math.PI/180,n=Je(.28,2.25,eh(.15,1,t));va.set(Math.sin(n)*Math.cos(e),Math.sin(e),-Math.cos(n)*Math.cos(e)).normalize(),ge.uSunDir.value.copy(va);let s=xa.material.uniforms;s.turbidity.value=Je(14,1.8,t),s.rayleigh.value=Je(3.6,1.1,t),s.mieCoefficient.value=Je(.016,.004,t),s.mieDirectionalG.value=Je(.96,.85,t),s.sunPosition.value.copy(va).multiplyScalar(1e3),ge.uSunCol.value.copy(bi.sunD).lerp(bi.sunC,t),ge.uSkyHor.value.copy(bi.horD).lerp(bi.horC,t),ge.uSkyZen.value.copy(bi.zenD).lerp(bi.zenC,t),wn.color.copy(ge.uSunCol.value),wn.intensity=Je(2.2,3.6,t),rh.color.copy(bi.hemD).lerp(bi.hemC,t),rh.intensity=Je(.9,1.25,t),wn.position.copy(Qt.t).addScaledVector(va,400),wn.target.position.copy(Qt.t);let r=Ee.position.y<0;if(xa.visible=!r,r){let o=Xi.watDirty.clone().lerp(Xi.watClean,t).convertLinearToSRGB(),a=.32+.68*Math.exp(Ee.position.y/34);Id.setRGB(o.r*a,o.g*a,o.b*a,Re),Tn.background=Id}else Tn.background=null;hn.toneMappingExposure=Je(.46,.6,t)*Je(1,1.3,eh(.3,-2.5,Ee.position.y)),Vr.intensity=r?Je(3200,700,t):0,Dd.material.uniforms.uSplit.value=eh(5,1.6,Math.abs(Ee.position.y))}function Gd(){hn.setSize(innerWidth,innerHeight),Ee.aspect=innerWidth/innerHeight,Ee.updateProjectionMatrix(),Wd()}function Wd(){let i=hn.getDrawingBufferSize(new it).y/(2*Math.tan(Ze.degToRad(Ee.fov/2)));Br.forEach(t=>{t.uniforms.uScale&&(t.uniforms.uScale.value=i)})}addEventListener("resize",Gd);Gd();var Qv=new ha,Ws=0,Pd=new I,Ld=1;function Xd(i){let t=Math.min(.05,Qv.getDelta());if(Ws+=t,ge.uTime.value=Ws,ge.uGate.value+=(ya-ge.uGate.value)*Math.min(1,t*.9),Nn.lamp.color.set(ge.uGate.value>.5?"#4fd6c4":"#ff3b2a"),Nn.lamp.emissive.copy(Nn.lamp.color),Nn.wheel.rotation.z=ge.uGate.value*6,Ei){let r=Ei,o=Math.min(1,(i-r.st)/r.dur),a=ah(o);Qt.p.lerpVectors(r.p0,r.s.p,a),Qt.t.lerpVectors(r.t0,r.s.t,a),Qt.shift=Je(r.sh0,r.s.shift,a),Qt.fov=Je(r.f0,r.s.fov,a);let c=Qt.p.clone().sub(Qt.t).setY(0).normalize();Qt.p.addScaledVector(c,Math.sin(o*Math.PI)*r.bulge),!r.rev&&o>=.62&&(r.rev=!0,Fd(sn)),o>=1&&(Ei=null,Zv())}if(Xs&&Ei&&(Xs.st=i,Xs.p0.copy(Qt.p),Xs.t0.copy(Qt.t),Xs.f0=Qt.fov),Xs&&!Ei){let r=Xs,o=Math.min(1,(i-r.st)/r.dur),a=ah(o);Qt.p.lerpVectors(r.p0,r.d.p,a),Qt.t.lerpVectors(r.t0,r.d.t,a),Qt.fov=Je(r.f0,r.d.fov,a),o>=1&&(Xs=null,Sa=2)}nh+=(kd-nh)*.04,ih+=(Vd-ih)*.04;let e=Fn?0:1;Pd.set(Math.sin(Ws*.21)*.6*e+nh*2.2,Math.sin(Ws*.17)*.35*e-ih*1.2,0),Ee.position.copy(Qt.p).add(Pd),Ee.lookAt(Qt.t),Math.abs(Ee.fov-Qt.fov)>.01&&(Ee.fov=Qt.fov,Ee.updateProjectionMatrix(),Wd());let n=innerWidth,s=innerHeight;Ee.setViewOffset(n,s,-Qt.shift*n,0,n,s),ge.uCam.value.copy(Ee.position),Ld>=0&&Ee.position.y<0&&(oh.material.uniforms.uBurst.value=Ws,oh.material.uniforms.uFrom.value.copy(Ee.position)),Ld=Ee.position.y,Kv(),Ue.forEach(r=>r(Ws,t)),hn.render(Tn,Ee),$v(),requestAnimationFrame(Xd)}var sh=parseInt((location.hash||"").replace("#s",""),10),qd=sh>=1&&sh<=ti.length?sh-1:0;ge.uGate.value=qd>3?1:0;ei(qd,!0);requestAnimationFrame(Xd);document.body.classList.add("ready");setTimeout(()=>{sn===0&&(We("#hint").style.opacity=.9)},2500);setTimeout(()=>{We("#hint").style.opacity=0},9e3)});jv();})();
+      #endif`}),_=[{c:[918,-9,-68],r:14,n:60,sp:.28,s:.75},{c:[878,-16,-48],r:8,n:30,sp:-.4,s:.6},{c:[1180,-14,-36],r:10,n:70,sp:.35,s:.8},{c:[1240,-9,-20],r:18,n:50,sp:-.22,s:1.2},{c:[1110,-6,-30],r:12,n:40,sp:.3,s:.7},{c:[1060,-7,-50],r:8,n:30,sp:.45,s:.6},{c:[700,-5,-10],r:10,n:30,sp:.3,s:.7},{c:[1600,-8,-5],r:14,n:50,sp:.3,s:.8}],m=_.reduce((w,A)=>w+A.n,0),p=new we(_a,g,m);p.frustumCulled=!1,t.add(p);let M=new bt,y=["#c7d3d6","#9fb3ba","#d8c99c","#a9bcc0"],v=[],P=0;return _.forEach((w,A)=>{for(let C=0;C<w.n;C++)v.push({s:w,a:Mi()*6.28,dr:ut(-3,3),dy:ut(-2.2,2.2),ph:ut(0,6)}),p.setColorAt(P++,M.set(y[A%4]))}),Ue.push(w=>{v.forEach((A,C)=>{let S=A.s,x=A.a+w*S.sp*(12/S.r),R=S.r+A.dr+Math.sin(w*.3+A.ph)*1.5;e.position.set(S.c[0]+Math.cos(x)*R,S.c[1]+A.dy+Math.sin(w*.5+A.ph)*.6,S.c[2]+Math.sin(x)*R*.6),e.rotation.set(0,-x+(S.sp>0?-Math.PI/2:Math.PI/2),Math.sin(w+A.ph)*.08),e.scale.setScalar(S.s*(.8+C%5*.08)),e.updateMatrix(),p.setMatrixAt(C,e.matrix)}),p.instanceMatrix.needsUpdate=!0}),t}var Ne,Jl,Mi,ut,ee,Wt,le,ot,Ue,_a,$l,Nn,gd,Ql,Vs,Rd=Ti(()=>{vi();pd();Or();ga();Zl();Ne=I,Jl=3,Mi=()=>(Jl=Jl*16807%2147483647,(Jl-1)/2147483646),ut=(i,t)=>i+Mi()*(t-i),ee=(i,t,e=!0)=>{let n=new ue(i,t);return n.castShadow=e,n.receiveShadow=!0,n},Wt=(i,t,e,n)=>ee(new Ce(i,t,e),n),le=(i,t,e,n,s=24)=>ee(new Qn(i,t,e,s),n),ot=(i,t,e,n)=>(i.position.set(t,e,n),i),Ue=[];_a=Bv();Nn={};Vs=[]});var jv=$d(()=>{vi();rd();Or();ga();Zl();Rd();var We=i=>document.querySelector(i),Ma=i=>[...document.querySelectorAll(i)],Je=Ze.lerp,eh=(i,t,e)=>Ze.smoothstep(e,i,t),Fn=/[?&]shot/.test(location.search);Fn&&document.body.classList.add("shot");var hn;try{hn=new qo({antialias:!0,powerPreference:"high-performance"})}catch(i){throw We("#nogl").hidden=!1,i}hn.setPixelRatio(Math.min(devicePixelRatio,1.75));hn.toneMapping=Ll;hn.outputColorSpace=Re;hn.shadowMap.enabled=!0;hn.shadowMap.type=Pl;hn.localClippingEnabled=!0;We("#gl").appendChild(hn.domElement);var Tn=new Yo,Ee=new Be(52,innerWidth/innerHeight,.3,3e4),xa=new Ur;xa.scale.setScalar(2e4);Tn.add(xa);var wn=new la("#ffffff",3);wn.castShadow=!0;wn.shadow.mapSize.set(2048,2048);Object.assign(wn.shadow.camera,{left:-110,right:110,top:110,bottom:-110,near:1,far:900});wn.shadow.bias=-4e-4;wn.shadow.normalBias=.6;Tn.add(wn,wn.target);var rh=new ca("#bcd9ec","#4a3f30",1.1);Tn.add(rh);var Vr=new Os("#fff1dc",0,90,.62,.7,1.5);Ee.add(Vr);Vr.position.set(.8,-.6,0);Vr.target.position.set(0,-6,-30);Ee.add(Vr.target);Tn.add(Ee);var un=new Kt;Tn.add(un);var{mesh:kv,ht:Vv}=cd();un.add(kv);var Dd=ld(Vv);Tn.add(Dd);Tn.add(ud());var oh=hd();Tn.add(oh);_d(un);xd(un);yd(un);var En=Md(un);un.add(th(910,-40,{base:!0,cut:!0,speed:.75}));[[1e3,-250,.8],[1120,-330,.85],[1260,-255,.8],[1390,-380,.9],[1530,-300,.8],[1190,-540,.9],[1440,-560,.9],[1650,-460,.85],[870,-420,.8]].forEach(([i,t,e])=>un.add(th(i,t,{scale:e,speed:.6+Math.random()*.4})));Ed(un);wd(un);Td(un);Ad(un);var zr=[{p:[-22,7,-22],t:[55,13,-132],shift:.2},{p:[354,-45,8],t:[380,-57,-18],shift:0},{p:[564,9.5,10],t:[598,4.6,-28],shift:.2,dive:{p:[688,10,36],t:[690,7,-40],fov:62,dur:4500}},{p:[699.4,8.8,-15.8],t:[706,6.7,-26],shift:.2,fov:46},{p:[868,4,42],t:[904,24,-40],shift:.2,fov:60,dive:{p:[887,-12.5,-2],t:[910,-19.5,-40],fov:54}},{p:[1110,6,50],t:[1150,3,-70],shift:0,fov:60,dive:{p:[1168,-8,6],t:[1192,-15,-60],fov:64}},{p:[1318,10,30],t:[1370,3,-110],shift:0},{p:[688,10,36],t:[690,7,-40],shift:0,fov:60},{p:[1452,13,26],t:[1452,1,-200],shift:0},{p:[1574,3.6,4],t:[1588,2.6,-16],shift:0},
+		{p:[1236,12,-150],t:[1320,30,-340],shift:0},{p:[1880,6,24],t:[1760,6,-120],shift:0},{p:[1990,9,-20],t:[1800,5,-140],shift:0},{p:[1700,8,30],t:[1790,5,-130],shift:0},
+		{p:[1652,7,44],t:[1740,6,-96],shift:.2}].map(i=>({p:new I(...i.p),t:new I(...i.t),shift:i.shift,fov:i.fov||52,dive:i.dive&&{p:new I(...i.dive.p),t:new I(...i.dive.t),fov:i.dive.fov,dur:i.dive.dur||6e3}}));zr.splice(13,0,...Array.from({length:1},()=>({...zr[12],p:zr[12].p.clone(),t:zr[12].t.clone()})));/* safety net: every scene needs a camera shot. Missing ones reuse the previous shot. */
+while(zr.length<document.querySelectorAll(".scene").length){
+  const l=zr[zr.length-1];
+  zr.push({...l,p:l.p.clone(),t:l.t.clone(),dive:undefined});
+}
+		var Qt={p:zr[0].p.clone(),t:zr[0].t.clone(),shift:zr[0].shift,fov:52},Ei=null,sn=-1,Xs=null,Sa=1;function Ud(){let i=zr[sn].dive;if(i){if(Fn){let t=location.search.match(/dk=([\d.]+)/),e=t?+t[1]:1,n=ah(e);Qt.p.lerp(i.p,n),Qt.t.lerp(i.t,n),Qt.fov=Je(Qt.fov,i.fov,n),Sa=e>=1?2:1;return}Xs={p0:Qt.p.clone(),t0:Qt.t.clone(),f0:Qt.fov,d:i,st:performance.now(),dur:i.dur}}}var ah=i=>i<.5?4*i*i*i:1-Math.pow(-2*i+2,3)/2;function Gv(i,t){let e=zr[i];if(t||Fn){Qt.p.copy(e.p),Qt.t.copy(e.t),Qt.shift=e.shift,Qt.fov=e.fov,Ei=null;return}let n=Qt.p.distanceTo(e.p);Ei={p0:Qt.p.clone(),t0:Qt.t.clone(),sh0:Qt.shift,f0:Qt.fov,s:e,st:performance.now(),dur:Math.min(5600,2600+n*6),bulge:Math.min(n*.16,40),rev:!1}}var ya=0;function Wv(i){ya=i>2?1:0}var ti=Ma(".scene"),Nd=We("#segs");ti.forEach((i,t)=>{let e=document.createElement("button");e.className="seg",e.type="button",e.title=i.dataset.name,e.setAttribute("aria-label",`Scene ${t+1}: ${i.dataset.name}`),e.innerHTML="<i></i>",e.addEventListener("click",()=>ei(t)),Nd.appendChild(e)});var qs=[],kr=(i,t)=>qs.push(setTimeout(i,t));function ei(i,t){if(i=Math.max(0,Math.min(ti.length-1,i)),!(i===sn&&!t)){qs.forEach(clearTimeout),qs=[],ti.forEach(e=>e.classList.remove("active")),En.active=!1,sn=i,Xs=null,Sa=1,Wv(i),Gv(i,t),[...Nd.children].forEach((e,n)=>{e.classList.toggle("on",n===i),e.classList.toggle("done",n<i)}),We("#now").textContent=`${i+1} / ${ti.length} \xB7 ${ti[i].dataset.name}`;try{history.replaceState(null,"",location.search+"#s"+(i+1))}catch{}We("#hint").style.opacity=0,Ei||Fd(i)}}function Xv(i){i.querySelectorAll("[data-count]").forEach(t=>{let e=+t.dataset.count,n=performance.now()+500;if(Fn){t.textContent=e;return}let s=r=>{let o=Math.min(1,Math.max(0,(r-n)/1400)),a=1-Math.pow(1-o,3);t.textContent=Math.round(e*a),o<1&&requestAnimationFrame(s)};t.textContent="0",requestAnimationFrame(s)})}var Ji={};function Fd(i){En.active=i===3;let t=ti[i];t.classList.add("active"),Xv(t),Ji[i]?.()}Ji[0]=()=>{let i=performance.now(),t=setInterval(()=>{We("#tick").textContent=((performance.now()-i)/1e3*.162).toFixed(1)},100);qs.push(t)};Ji[4]=Ji[5]=()=>kr(Ud,Fn?0:1600);Ji[2]=()=>{ya=0,kr(()=>{ya=1},Fn?0:2600),kr(Ud,Fn?0:5100)};var Od=Ma("#steps li"),qv=We("#cap"),Yv=["Dewatered cake, tested for radium and metals","Binder locks contaminants into a solid","HDPE liner: a second wall","Marine concrete shell: a certified module"];function Hr(i){En.stage=i,qv.textContent=Yv[i],Od.forEach((t,e)=>t.classList.toggle("on",e===Math.min(Math.max(i-1,0),2)&&i>0||i===0&&e===0))}Ji[3]=()=>{if(En.peel=0,We("#peel").classList.remove("on"),Hr(0),Fn){En.snap=!0,Hr(3),/peel/.test(location.search)&&(En.peel=1);return}[1,2,3].forEach((i,t)=>kr(()=>Hr(i),1700+t*2e3))};Od.forEach((i,t)=>{let e=()=>{qs.forEach(clearTimeout),Hr(t+1)};i.addEventListener("click",e),i.addEventListener("keydown",n=>{(n.key==="Enter"||n.key===" ")&&(n.preventDefault(),n.stopPropagation(),e())})});We("#peel").addEventListener("click",()=>{qs.forEach(clearTimeout),En.stage<3&&Hr(3),En.peel=En.peel?0:1,We("#peel").classList.toggle("on",!!En.peel),We("#peel").textContent=En.peel?"Close it":"See inside"});var Cd=Ma("#roadcards .card");Ji[8]=()=>{let L=Ma('.lbl.num[data-s="9"]'),go=(p,t,dur)=>{Xs={p0:Qt.p.clone(),t0:Qt.t.clone(),f0:Qt.fov,d:{p,t,fov:52},st:performance.now(),dur}};Vs.forEach(i=>i.target=0),Cd.forEach(i=>i.classList.remove("on","cur")),L.forEach(i=>i.classList.remove("lit")),Vs.forEach((i,t)=>kr(()=>{i.target=1,Cd.forEach(c=>c.classList.remove("cur")),Cd[t].classList.add("on","cur"),L[t]&&L[t].classList.add("lit"),Fn||go(i.pos.clone().set(i.pos.x+10,10,i.pos.z+30),i.pos.clone().set(i.pos.x,4,i.pos.z-25),t?2e3:2400)},Fn?0:600+t*3400)),Fn||kr(()=>{Cd.forEach(c=>c.classList.remove("cur")),go(zr[8].p.clone(),zr[8].t.clone(),2800)},600+5*3400)};function Zv(){sn!==8&&Vs.forEach(i=>i.target=0)}We("#prev").addEventListener("click",()=>ei(sn-1));We("#next").addEventListener("click",()=>ei(sn+1));addEventListener("keydown",i=>{i.target.closest&&i.target.closest(".steps li")&&(i.key===" "||i.key==="Enter")||(["ArrowRight","ArrowDown","PageDown"," "].includes(i.key)?(i.preventDefault(),ei(sn+1)):["ArrowLeft","ArrowUp","PageUp"].includes(i.key)?(i.preventDefault(),ei(sn-1)):i.key==="Home"?ei(0):i.key==="End"?ei(ti.length-1):(i.key==="f"||i.key==="F")&&Bd())});function Bd(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch{}}We("#fs").addEventListener("click",Bd);var zd=0,Hd=0;addEventListener("pointerdown",i=>{zd=i.clientX,Hd=i.clientY});addEventListener("pointerup",i=>{let t=i.clientX-zd,e=i.clientY-Hd;Math.abs(t)>60&&Math.abs(e)<80&&i.pointerType!=="mouse"&&ei(sn+(t<0?1:-1))});var kd=0,Vd=0,nh=0,ih=0;addEventListener("pointermove",i=>{kd=i.clientX/innerWidth-.5,Vd=i.clientY/innerHeight-.5});var Jv=Ma(".lbl").map(i=>({el:i,s:+i.dataset.s-1,ph:+(i.dataset.ph||0),p:new I(...i.dataset.p.split(",").map(Number))})),Gs=new I;function $v(){let i=innerWidth,t=innerHeight;Jv.forEach(e=>{let n=e.s===sn&&!Ei&&!Xs&&ti[sn].classList.contains("active")&&(!e.ph||e.ph===Sa);Gs.copy(e.p).project(Ee);let s=n&&Gs.z<1&&Math.abs(Gs.x)<1.05&&Math.abs(Gs.y)<1.05;e.el.classList.toggle("on",s),s&&(e.el.style.transform=`translate(${((Gs.x+1)/2*i).toFixed(1)}px,${((1-Gs.y)/2*t).toFixed(1)}px)`)})}var Si=i=>new bt(i),bi={horD:Si("#c98d5e"),zenD:Si("#2d2a36"),horC:Si("#b9dceb"),zenC:Si("#2e6aa6"),sunD:Si("#ffae6e"),sunC:Si("#fff1dc"),hemD:Si("#8a7569"),hemC:Si("#bcd9ec")},va=new I,Id=new bt;function Kv(){let i=ge.uGate.value,t=od(Qt.p.x,i),e=Je(4.5,42,t)*Math.PI/180,n=Je(.28,2.25,eh(.15,1,t));va.set(Math.sin(n)*Math.cos(e),Math.sin(e),-Math.cos(n)*Math.cos(e)).normalize(),ge.uSunDir.value.copy(va);let s=xa.material.uniforms;s.turbidity.value=Je(14,1.8,t),s.rayleigh.value=Je(3.6,1.1,t),s.mieCoefficient.value=Je(.016,.004,t),s.mieDirectionalG.value=Je(.96,.85,t),s.sunPosition.value.copy(va).multiplyScalar(1e3),ge.uSunCol.value.copy(bi.sunD).lerp(bi.sunC,t),ge.uSkyHor.value.copy(bi.horD).lerp(bi.horC,t),ge.uSkyZen.value.copy(bi.zenD).lerp(bi.zenC,t),wn.color.copy(ge.uSunCol.value),wn.intensity=Je(2.2,3.6,t),rh.color.copy(bi.hemD).lerp(bi.hemC,t),rh.intensity=Je(.9,1.25,t),wn.position.copy(Qt.t).addScaledVector(va,400),wn.target.position.copy(Qt.t);let r=Ee.position.y<0;if(xa.visible=!r,r){let o=Xi.watDirty.clone().lerp(Xi.watClean,t).convertLinearToSRGB(),a=.32+.68*Math.exp(Ee.position.y/34);Id.setRGB(o.r*a,o.g*a,o.b*a,Re),Tn.background=Id}else Tn.background=null;hn.toneMappingExposure=Je(.46,.6,t)*Je(1,1.3,eh(.3,-2.5,Ee.position.y)),Vr.intensity=r?Je(3200,700,t):0,Dd.material.uniforms.uSplit.value=eh(5,1.6,Math.abs(Ee.position.y))}function Gd(){hn.setSize(innerWidth,innerHeight),Ee.aspect=innerWidth/innerHeight,Ee.updateProjectionMatrix(),Wd()}function Wd(){let i=hn.getDrawingBufferSize(new it).y/(2*Math.tan(Ze.degToRad(Ee.fov/2)));Br.forEach(t=>{t.uniforms.uScale&&(t.uniforms.uScale.value=i)})}addEventListener("resize",Gd);Gd();var Qv=new ha,Ws=0,Pd=new I,Ld=1;function Xd(i){let t=Math.min(.05,Qv.getDelta());if(Ws+=t,ge.uTime.value=Ws,ge.uGate.value+=(ya-ge.uGate.value)*Math.min(1,t*.9),Nn.lamp.color.set(ge.uGate.value>.5?"#4fd6c4":"#ff3b2a"),Nn.lamp.emissive.copy(Nn.lamp.color),Nn.wheel.rotation.z=ge.uGate.value*6,Ei){let r=Ei,o=Math.min(1,(i-r.st)/r.dur),a=ah(o);Qt.p.lerpVectors(r.p0,r.s.p,a),Qt.t.lerpVectors(r.t0,r.s.t,a),Qt.shift=Je(r.sh0,r.s.shift,a),Qt.fov=Je(r.f0,r.s.fov,a);let c=Qt.p.clone().sub(Qt.t).setY(0).normalize();Qt.p.addScaledVector(c,Math.sin(o*Math.PI)*r.bulge),!r.rev&&o>=.62&&(r.rev=!0,Fd(sn)),o>=1&&(Ei=null,Zv())}if(Xs&&Ei&&(Xs.st=i,Xs.p0.copy(Qt.p),Xs.t0.copy(Qt.t),Xs.f0=Qt.fov),Xs&&!Ei){let r=Xs,o=Math.min(1,(i-r.st)/r.dur),a=ah(o);Qt.p.lerpVectors(r.p0,r.d.p,a),Qt.t.lerpVectors(r.t0,r.d.t,a),Qt.fov=Je(r.f0,r.d.fov,a),o>=1&&(Xs=null,Sa=2)}nh+=(kd-nh)*.04,ih+=(Vd-ih)*.04;let e=Fn?0:1;Pd.set(Math.sin(Ws*.21)*.6*e+nh*2.2,Math.sin(Ws*.17)*.35*e-ih*1.2,0),Ee.position.copy(Qt.p).add(Pd),Ee.lookAt(Qt.t),Math.abs(Ee.fov-Qt.fov)>.01&&(Ee.fov=Qt.fov,Ee.updateProjectionMatrix(),Wd());let n=innerWidth,s=innerHeight;Ee.setViewOffset(n,s,-Qt.shift*n,0,n,s),ge.uCam.value.copy(Ee.position),Ld>=0&&Ee.position.y<0&&(oh.material.uniforms.uBurst.value=Ws,oh.material.uniforms.uFrom.value.copy(Ee.position)),Ld=Ee.position.y,Kv(),Ue.forEach(r=>r(Ws,t)),hn.render(Tn,Ee),$v(),requestAnimationFrame(Xd)}var sh=parseInt((location.hash||"").replace("#s",""),10),qd=sh>=1&&sh<=ti.length?sh-1:0;ge.uGate.value=qd>2?1:0;ei(qd,!0);requestAnimationFrame(Xd);document.body.classList.add("ready");setTimeout(()=>{sn===0&&(We("#hint").style.opacity=.9)},2500);setTimeout(()=>{We("#hint").style.opacity=0},9e3)});jv();})();
 </script>
 </body>
 </html>
